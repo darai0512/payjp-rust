@@ -17,8 +17,8 @@ edition.workspace = true
 name = "payjp_client_core"
 
 [dependencies]
-async-payjp-shared = { path = "../generated/async-payjp-shared" }
-async-payjp-types = { path = "../async-payjp-types" }
+async-payjp-shared = {version=">=0.0.1", path = "../generated/async-payjp-shared" }
+async-payjp-types = {version=">=0.0.1", path = "../async-payjp-types" }
 serde_json.workspace = true
 serde.workspace = true
 serde_qs.workspace = true
