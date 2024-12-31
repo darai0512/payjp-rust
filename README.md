@@ -1,6 +1,6 @@
 # Pay.jp OpenAPI spec & rust binding
 
-[![crates.io](https://img.shields.io/crates/v/payjp-rust.svg)](https://crates.io/crates/payjp-rust)
+[![crates.io](https://img.shields.io/crates/v/payjp-rust.svg)](https://crates.io/crates/payjp)
 [![docs.rs](https://docs.rs/payjp-rust/badge.svg)](https://docs.rs/payjp-rust)
 
 based on [arlyon/async-stripe](https://github.com/arlyon/async-stripe) by Alexander Lyon
