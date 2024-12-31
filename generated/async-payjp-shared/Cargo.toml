@@ -20,7 +20,7 @@ serde.workspace = true
 serde_json = { workspace = true, optional = true }
 smol_str.workspace = true
 miniserde.workspace = true
-async-payjp-types = {path = "../../async-payjp-types"}
+async-payjp-types = {version=">=0.0.1", path = "../../async-payjp-types"}
 
 
 
