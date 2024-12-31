@@ -1,0 +1,310 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PAY.JP API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/balances/{balance}": {
+      "get": {
+        "summary": "残高を取得",
+        "description": "特定の残高オブジェクトを取得します。",
+        "parameters": [
+          {"$ref": "#/components/parameters/balance"}
+        ],
+        "responses": {
+          "200": {
+            "description": "指定したidのBalanceオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/balance"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/balances/{balance}/statement_urls": {
+      "post": {
+        "summary": "取引明細一括ダウンロードURLを発行",
+        "description": "Balanceに含まれるStatementすべての取引明細およびインボイスを一括ダウンロードできる一時URLを発行します。",
+        "parameters": [
+          {"$ref": "#/components/parameters/balance"}
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "platformer": {
+                    "type": "boolean",
+                    "description": "`true`を指定するとプラットフォーム手数料に関する明細がダウンロードできるURLを発行します。",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "取引明細ダウンロードURLオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./statement.json#/components/schemas/statement_url"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/balances": {
+      "get": {
+        "parameters": [
+          {"$ref": "./base.json#/components/parameters/limit"},
+          {"$ref": "./base.json#/components/parameters/offset"},
+          {"$ref": "./base.json#/components/parameters/since"},
+          {"$ref": "./base.json#/components/parameters/until"},
+          {
+            "name": "since_due_date",
+            "in": "query",
+            "description": "入金予定日/振込期限日が指定したタイムスタンプ以降のデータのみ取得",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "until_due_date",
+            "in": "query",
+            "description": "入金予定日/振込期限日が指定したタイムスタンプ以前のデータのみ取得",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "stateが指定した値であるオブジェクトに限定",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "collecting",
+                "transfer",
+                "claim"
+              ]
+            }
+          },
+          {
+            "name": "closed",
+            "in": "query",
+            "description": "closedが指定した値であるオブジェクトに限定",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "owner",
+            "in": "query",
+            "description": "Balanceの所有者で絞り込みます。以下の値が指定できます。`merchant`または`tenant`",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "merchant",
+                "tenant"
+              ]
+            }
+          },
+          {
+            "name": "tenant",
+            "in": "query",
+            "description": "指定したテナントが所有者であるオブジェクトに限定",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balanceオブジェクトのリスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "./base.json#/components/schemas/list"
+                    }
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/balance"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "balance": {
+        "name": "balance",
+        "in": "path",
+        "description": "ba_で始まる残高オブジェクトのID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "ba_013f3c308b771358605dd2445d60f"
+        }
+      }
+    },
+    "schemas": {
+      "balance": {
+        "$dynamicAnchor": "payjpObject",
+        "type": "object",
+        "description": "Balanceオブジェクト",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "固定文字列",
+            "enum": [
+              "balance"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "description": "ba_で始まる一意なオブジェクトを示す文字列",
+            "example": "ba_013f3c308b771358605dd2445d60f"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "本番環境かどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "オブジェクト作成時刻のUTCタイムスタンプ"
+          },
+          "tenant_id": {
+            "type": "string", "nullable": true,
+            "description": "オブジェクトを所有するTenantのID"
+          },
+          "net": {
+            "type": "integer",
+            "description": "関連付けられているStatementの総額"
+          },
+          "statements": {
+            "type": "array",
+            "items": {"$ref": "./statement.json#/components/schemas/statement"},
+            "description": "関連付けられているStatementオブジェクトのリスト"
+          },
+          "state": {
+            "type": "string",
+            "description": "Balanceの状態",
+            "enum": ["collecting", "transfer", "claim"]
+          },
+          "closed": {
+            "type": "boolean",
+            "description": "このBalanceの清算が終了していればtrue"
+          },
+          "closed_date": {
+            "type": "integer", "nullable": true,
+            "format": "int64",
+            "description": "精算が終了した日時のタイムスタンプ"
+          },
+          "due_date": {
+            "type": "integer", "nullable": true,
+            "format": "int64",
+            "description": "入金予定日/請求期限日のタイムスタンプ"
+          },
+          "bank_info": {
+            "$ref": "#/components/schemas/bank_info",
+            "description": "入金先口座情報"
+          }
+        },
+        "required": ["object", "id", "livemode", "created", "net", "statements", "state", "closed"]
+      },
+      "bank_info": {
+        "type": "object",
+        "description": "入金先口座情報",
+        "properties": {
+          "bank_code": {
+            "type": "string",
+            "description": "銀行コード"
+          },
+          "bank_branch_code": {
+            "type": "string",
+            "description": "支店番号"
+          },
+          "bank_account_type": {
+            "type": "string",
+            "description": "口座種別"
+          },
+          "bank_account_number": {
+            "type": "string",
+            "description": "口座番号"
+          },
+          "bank_account_holder_name": {
+            "type": "string",
+            "description": "口座名義"
+          },
+          "bank_account_status": {
+            "type": "string",
+            "description": "最新振込結果",
+            "enum": ["success", "failed", "pending"]
+          }
+        },
+        "required": [
+          "bank_code",
+          "bank_branch_code",
+          "bank_account_type",
+          "bank_account_number",
+          "bank_account_holder_name",
+          "bank_account_status"
+        ]
+      }
+    }
+  }
+}

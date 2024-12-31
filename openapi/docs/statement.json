@@ -1,0 +1,308 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PAY.JP API",
+    "version": "1.0.0",
+    "description": "PAY.JP Statement API specification in OpenAPI 3.0"
+  },
+  "paths": {
+    "/statements/{statement}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/statement"}
+      ],
+      "get": {
+        "summary": "取引明細を取得",
+        "description": "取引明細を取得します。",
+        "responses": {
+          "200": {
+            "description": "指定したidのstatementオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/statement"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statements/{statement}/statement_urls": {
+      "parameters": [
+        {"$ref": "#/components/parameters/statement"}
+      ],
+      "post": {
+        "summary": "取引明細ダウンロードURLを発行",
+        "description": "取引明細およびインボイスをダウンロードできる一時URLを発行します。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "platformer": {
+                    "type": "boolean",
+                    "description": "`true`を指定するとプラットフォーム手数料に関する明細がダウンロードできるURLを発行します。",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Statement URL オブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/statement_url"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/statements": {
+      "get": {
+        "summary": "取引明細リストを取得",
+        "description": "取引明細リストを取得します。",
+        "parameters": [
+          {"$ref": "./base.json#/components/parameters/limit"},
+          {"$ref": "./base.json#/components/parameters/offset"},
+          {"$ref": "./base.json#/components/parameters/since"},
+          {"$ref": "./base.json#/components/parameters/until"},
+          {
+            "name": "owner",
+            "in": "query",
+            "description": "取引明細の発行対象で絞り込みます。以下の値が指定できます。\n\n| owner | 絞り込み対象 |\n| ----- | ------------ |\n| merchant | 加盟店に向けて発行されたもの |\n| tenant | テナントに向けて発行されたもの |",
+            "schema": {
+              "type": "string",
+              "enum": ["merchant", "tenant"]
+            }
+          },
+          {
+            "name": "source_transfer",
+            "in": "query",
+            "description": "取引明細の生成元オブジェクトで絞り込みます。\n\ntransferオブジェクトもしくは tenant_transferオブジェクトのIDを指定します。",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenant",
+            "in": "query",
+            "description": "テナントのIDで絞り込みます。",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "description": "集計区間のIDで絞り込みます。",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "typeの値で絞り込みます。",
+            "schema": {
+              "type": "string",
+              "enum": ["sales", "service_fee", "forfeit", "transfer_fee", "misc"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "statementオブジェクトのlistオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "./base.json#/components/schemas/list"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "description": "オブジェクトの配列",
+                          "items": {"$ref": "#/components/schemas/statement"}
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "statement": {
+        "name": "statement",
+        "in": "path",
+        "description": "statement ID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "st_178fd25dc7ab7b75906f5d4c4b0e6"
+        }
+      }
+    },
+    "schemas": {
+      "statement_item": {
+        "type": "object",
+        "description": "Statementに含まれる項目",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "集計項目"
+          },
+          "name": {
+            "type": "string",
+            "description": "Subjectに対応する表示名"
+          },
+          "amount": {
+            "type": "integer",
+            "description": "集計された金額\n正の値は加盟店への支払額、負の値は請求額を表します。"
+          },
+          "tax_rate": {
+            "type": "string",
+            "description": "税率(パーセント表記)。小数点以下2桁までの数値の文字列型。"
+          }
+        },
+        "required": ["subject", "name", "amount", "tax_rate"]
+      },
+      "statement": {
+        "type": "object",
+        "description": "Statementオブジェクト",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "固定文字列",
+            "enum": ["statement"]
+          },
+          "id": {
+            "type": "string",
+            "description": "オブジェクトのユニークID",
+            "example": "st_178fd25dc7ab7b75906f5d4c4b0e6"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "livemodeオブジェクトならtrue",
+            "example": "ba_013f3c308b771358605dd2445d60f"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "作成時刻のUTCタイムスタンプ"
+          },
+          "title": {
+            "type": "string", "nullable": true,
+            "description": "取引明細のタイトル"
+          },
+          "tenant_id": {
+            "type": "string", "nullable": true,
+            "description": "オブジェクトを所有するTenantのID"
+          },
+          "type": {
+            "type": "string",
+            "description": "取引明細の区分",
+            "enum": ["sales", "service_fee", "forfeit", "transfer_fee", "misc"]
+          },
+          "net": {
+            "type": "integer",
+            "description": "含まれるstatement_itemの金額合計"
+          },
+          "updated": {
+            "type": "integer",
+            "format": "int64",
+            "description": "更新時刻のUTCタイムスタンプ"
+          },
+          "term": {
+            "allOf": [
+              {
+                "$ref": "./term.json#/components/schemas/term"
+              },
+              {
+                "nullable": true,
+                "description": "このStatementの生成元となったTermオブジェクト"
+              }
+            ]
+          },
+          "balance_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "ba_013f3c308b771358605dd2445d60f",
+            "description": "このStatementが関連付けられているBalanceのID"
+          },
+          "items": {
+            "type": "array",
+            "description": "statement_itemオブジェクトのリスト",
+            "items": {
+              "$ref": "#/components/schemas/statement_item"
+            }
+          }
+        },
+        "required": ["object", "id", "livemode", "created", "type", "net", "updated", "items"]
+      },
+      "statement_url": {
+        "type": "object",
+        "description": "取引明細ダウンロードURLオブジェクト",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "固定値 \"statement_url\"",
+            "enum": ["statement_url"]
+          },
+          "url": {
+            "type": "string",
+            "description": "取引明細書ダウンロードURL"
+          },
+          "expires": {
+            "type": "integer",
+            "format": "int64",
+            "description": "有効期限のタイムスタンプ。\n有効期限は発行から1時間です。"
+          }
+        },
+        "required": ["object", "url", "expires"]
+      }
+    }
+  }
+}

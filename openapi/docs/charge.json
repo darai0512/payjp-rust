@@ -1,0 +1,586 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PAY.JP API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/charges": {
+      "post": {
+        "summary": "支払いを作成",
+        "description": "トークンIDまたはカードを保有している顧客IDを指定して支払いを作成します。\nテスト用のキーでは、本番用の決済ネットワークへは接続されず、実際の請求が行われることもありません。\n本番用のキーでは、決済ネットワークで処理が行われ、実際の請求が行われます。\n\n支払いを確定せずに、カードの認証と支払い額のみ確保する場合は、 `capture` に `false` を指定してください。\nこのとき `expiry_days` を指定することで、認証の期間を定めることができます。 `expiry_days` はデフォルトで7日となっており、1日~60日の間で設定が可能です。なお60日に設定した場合、認証期限は59日後の11:59PM(日本時間)までになります。また確保されました与信枠は、`expiry_days` で設定されました期間を過ぎると解放されるようなっております。\n\n`three_d_secure` にtrueを指定することで、3Dセキュアを開始できます。\n指定した場合、支払いオブジェクトは作成されますが実際の決済処理は保留された状態になります。\n保留中の支払いは、引数指定の内容に関わらず`captured`は`false`、`captured_at`は`null`、`expired_at`は`null`と表示されます。\nなお、支払い作成から30分を経過すると、3Dセキュアフローはタイムアウトし、処理が進められなくなります。\n3Dセキュアの進め方は、 [支払いで3Dセキュアを実施する](https://pay.jp/docs/charge-tds) を参照してください。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "description": "50~9,999,999の整数"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "3文字のISOコード(現状 \"jpy\" のみサポート)",
+                    "example": "jpy"
+                  },
+                  "product": {
+                    "type": "string",
+                    "description": "プロダクトID"
+                  },
+                  "customer": {
+                    "type": "string",
+                    "description": "顧客ID"
+                  },
+                  "card": {
+                    "type": "string",
+                    "description": "トークンIDまたはカードID"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "概要"
+                  },
+                  "capture": {
+                    "type": "boolean",
+                    "description": "支払い処理を確定するかどうか"
+                  },
+                  "expiry_days": {
+                    "type": "integer",
+                    "description": "認証状態が失効するまでの日数"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "キーバリューの任意データ",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "platform_fee": {
+                    "type": "integer",
+                    "description": "[PAY.JP Platform](#platform-api) のみ設定可能\n\nプラットフォーマーに振り分けられる入金金額。"
+                  },
+                  "tenant": {
+                    "type": "string",
+                    "description": "[PAY.JP Platform](#platform-api) のみ設定可能\n\nテナントID"
+                  },
+                  "three_d_secure": {
+                    "type": "boolean",
+                    "description": "3Dセキュアを行うならtrue"
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": ["amount", "currency"]
+                  },
+                  {
+                    "required": ["product"]
+                  }
+                ],
+                "anyOf": [
+                  {
+                    "required": ["card"]
+                  },
+                  {
+                    "required": ["customer"]
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "作成されたchargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "支払いリストを取得",
+        "description": "生成した支払い情報のリストを取得します。",
+        "parameters": [
+          {"$ref": "./base.json#/components/parameters/limit"},
+          {"$ref": "./base.json#/components/parameters/offset"},
+          {"$ref": "./base.json#/components/parameters/since"},
+          {"$ref": "./base.json#/components/parameters/until"},
+          {
+            "name": "customer",
+            "in": "query",
+            "description": "絞り込みたい顧客ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subscription",
+            "in": "query",
+            "description": "絞り込みたい定期課金ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenant",
+            "in": "query",
+            "description": "[PAY.JP Platform](#platform-api)のみ指定可能\n\n絞り込みたいテナントID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "description": "[入金管理オブジェクトの刷新に伴い、2024/06/01以降に提供されます。](https://pay.jp/docs/migrate-transfer)\n\n絞り込みたいTermのID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "chargeオブジェクトのlistオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "./base.json#/components/schemas/list"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "description": "オブジェクトの配列",
+                          "items": {"$ref": "#/components/schemas/charge"}
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges/{charge}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/charge"}
+      ],
+      "get": {
+        "summary": "支払い情報を取得",
+        "description": "生成された支払い情報を取得します。",
+        "responses": {
+          "200": {
+            "description": "指定したidのchargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "支払い情報を更新",
+        "description": "支払い情報を更新します。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "description": "概要"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "キーバリューの任意データ",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "更新されたchargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges/{charge}/tds_finish": {
+      "parameters": [
+        {"$ref": "#/components/parameters/charge"}
+      ],
+      "post": {
+        "summary": "3Dセキュアフローを完了する",
+        "description": "3Dセキュア認証が終了した支払いに対し、決済を行います。\n[支払いを作成](#支払いを作成) と同様の決済処理が実行され、実際の請求が行われる状態になります。カードの状態によっては支払いに失敗し、402エラーとなる点も同様です。\n保留中の支払いで固定値となっていた`capture`、`captured_at`、`expired_at`は、支払い作成時に指定した通りに反映されます。`captured_at`、`expired_at`の時刻は本APIにリクエストした時刻を基準として設定されます。\n\n`three_d_secure_status`が`verified`、`attempted`でない支払いに対して本APIをリクエストした場合、エラーとなります。",
+        "responses": {
+          "200": {
+            "description": "chargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges/{charge}/refund": {
+      "parameters": [
+        {"$ref": "#/components/parameters/charge"}
+      ],
+      "post": {
+        "summary": "返金する",
+        "description": "支払い済みとなった処理を返金します。全額返金、及び `amount` を指定することで金額の部分返金を行うことができます。また確定していない支払いも取り消すことができますが `amount` を指定して部分返金をすることはできません。\n\nなお返金可能な期限につきましては売上作成より`180日以内`となります。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "description": "1~9,999,999の整数"
+                  },
+                  "refund_reason": {
+                    "type": "string",
+                    "description": "返金理由 (255文字以内)"
+                  }
+                },
+                "required": ["amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "返金後の状態のchargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges/{charge}/reauth": {
+      "parameters": [
+        {"$ref": "#/components/parameters/charge"}
+      ],
+      "post": {
+        "summary": "支払いを再認証する",
+        "description": "**各種SDKは順次対応予定です**\n\n認証状態となった処理待ちの支払いを再認証します。 `captured=\"false\"` の支払いが対象です。\n`expiry_days` を指定することで、新たな認証の期間を定めることができます。 `expiry_days` はデフォルトで7日となっており、1日~60日の間で設定が可能です。なお60日に設定した場合、認証期限は59日後の11:59PM(日本時間)までになります。\n\n**再認証が必要な場合は認証状態の charge を[返金し](#返金する)、新たに[支払いを作成](#支払いを作成) することを推奨いたします。**\n\nこのAPIは認証済みの与信をキャンセルせず別の与信を作るため、同じ金額で認証済みでも失敗したり、デビットカードなどでは一度目の認証(capture=falseの支払い)と含めて二重に金額が引き落とされることがあります。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expiry_days": {
+                    "type": "integer",
+                    "description": "認証状態が失効するまでの日数"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "再認証後の状態のchargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/charges/{charge}/capture": {
+      "parameters": [
+        {"$ref": "#/components/parameters/charge"}
+      ],
+      "post": {
+        "summary": "支払い処理を確定する",
+        "description": "認証状態となった処理待ちの支払い処理を確定させます。具体的には `captured=\"false\"` となった支払いが該当します。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "integer",
+                    "description": "50~9,999,999の整数\n\nこれをセットすることで、支払い生成時の金額と異なる金額の支払い処理を行うことができます。\nただし支払い生成時の金額よりも少額である必要があるためご注意ください。\n\nセットした場合、レスポンスの `amount_refunded` に認証時の `amount` との差額が入ります。\n例えば、認証時に `amount=500` で作成し、 `amount=400` で支払い確定を行った場合、 `amount_refunded=100` となり、確定金額が400円に変更された状態で支払いが確定されます。"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "支払いが確定された状態のchargeオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/charge"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "charge": {
+        "name": "charge",
+        "in": "path",
+        "description": "支払いID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "ch_fa990a4c10672a93053a774730b0a"
+        }
+      }
+    },
+    "schemas": {
+      "charge": {
+        "type": "object",
+        "description": "chargeオブジェクト",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ch_で始まる一意なオブジェクトを示す文字列",
+            "example": "ch_fa990a4c10672a93053a774730b0a"
+          },
+          "object": {
+            "type": "string",
+            "description": "固定文字列",
+            "enum": ["charge"]
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "本番環境かどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "この支払い作成時のUTCタイムスタンプ"
+          },
+          "amount": {
+            "type": "integer",
+            "description": "支払い額"
+          },
+          "currency": {
+            "type": "string",
+            "description": "3文字のISOコード(現状 \"jpy\" のみサポート)",
+            "enum": ["jpy"]
+          },
+          "paid": {
+            "type": "boolean",
+            "description": "認証処理が成功しているかどうか。"
+          },
+          "expired_at": {
+            "type": "integer", "nullable": true,
+            "format": "int64",
+            "description": "認証状態が自動的に失効される日時のタイムスタンプ"
+          },
+          "captured": {
+            "type": "boolean",
+            "description": "支払い処理を確定しているかどうか"
+          },
+          "captured_at": {
+            "type": "integer", "nullable": true,
+            "format": "int64",
+            "description": "支払い処理確定時のUTCタイムスタンプ"
+          },
+          "card": {
+            "$ref": "./customer.json#/components/schemas/card"
+          },
+          "customer": {
+            "type": "string", "nullable": true,
+            "description": "顧客ID"
+          },
+          "description": {
+            "type": "string", "nullable": true,
+            "description": "概要"
+          },
+          "failure_code": {
+            "type": "string", "nullable": true,
+            "description": "失敗した支払いのエラーコード"
+          },
+          "failure_message": {
+            "type": "string", "nullable": true,
+            "description": "失敗した支払いの説明"
+          },
+          "fee_rate": {
+            "type": "string",
+            "description": "決済手数料率"
+          },
+          "refunded": {
+            "type": "boolean",
+            "description": "返金済みかどうか"
+          },
+          "amount_refunded": {
+            "type": "integer",
+            "description": "この支払いに対しての返金額"
+          },
+          "refund_reason": {
+            "type": "string", "nullable": true,
+            "description": "返金理由"
+          },
+          "subscription": {
+            "type": "string", "nullable": true,
+            "description": "sub_から始まる定期課金のID"
+          },
+          "metadata": {
+            "type": "object", "nullable": true,
+            "description": "キーバリューの任意データ",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "platform_fee": {
+            "type": "integer", "nullable": true,
+            "description": "[PAY.JP Platform](#platform-api) のみ\n\nプラットフォーマーに振り分けられる入金金額。"
+          },
+          "tenant": {
+            "type": "string", "nullable": true,
+            "description": "[PAY.JP Platform](#platform-api)のみ\n\nテナントID"
+          },
+          "platform_fee_rate": {
+            "type": "string", "nullable": true,
+            "description": "[PAY.JP Platform](#platform-api)のみ\n\n[テナント作成](#テナントを作成)時に指定したプラットフォーム利用料率(%)"
+          },
+          "total_platform_fee": {
+            "type": "integer", "nullable": true,
+            "description": "[PAY.JP Platform](#platform-api)のみ\n\nプラットフォーム利用料総額"
+          },
+          "three_d_secure_status": {
+            "type": "string", "nullable": true,
+            "description": "3Dセキュアの実施状況",
+            "enum": ["unverified", "verified", "attempted", "failed", "error", null]
+          },
+          "term_id": {
+            "type": "string", "nullable": true,
+            "description": "[入金管理オブジェクトの刷新に伴い、2024/06/01以降に提供されます。](https://pay.jp/docs/migrate-transfer)\n\nこの支払いが関連付けられたTermオブジェクトのID"
+          }
+        },
+        "required": ["id", "object", "livemode", "created", "amount", "currency", "paid", "captured", "card"]
+      }
+    }
+  }
+}

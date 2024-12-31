@@ -1,0 +1,649 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PAY.JP API",
+    "version": "20241101T12"
+  },
+  "paths": {
+    "/customers": {
+      "post": {
+        "summary": "顧客を作成",
+        "description": "メールアドレスやIDなどを指定して顧客を作成します。作成と同時にカード情報を登録する場合、トークンIDを指定します。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "メールアドレス"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "概要"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "顧客ID"
+                  },
+                  "card": {
+                    "type": "string",
+                    "description": "トークンID(トークンIDを指定)"
+                  },
+                  "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "作成されたCustomerオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/customer"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "顧客リストを取得",
+        "description": "生成した顧客情報のリストを取得します。リストは、直近で生成された順番に取得されます。",
+        "parameters": [
+          {"$ref": "./base.json#/components/parameters/limit"},
+          {"$ref": "./base.json#/components/parameters/offset"},
+          {"$ref": "./base.json#/components/parameters/since"},
+          {"$ref": "./base.json#/components/parameters/until"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Customerオブジェクトのリスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "./base.json#/components/schemas/list"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "description": "オブジェクトの配列",
+                          "items": {"$ref": "#/components/schemas/customer"}
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{customer}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/customer"}
+      ],
+      "get": {
+        "summary": "顧客情報を取得",
+        "description": "生成した顧客情報を取得します。",
+        "responses": {
+          "200": {
+            "description": "Customerオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/customer"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "顧客情報を更新",
+        "description": "生成した顧客情報を更新したり、新たなカードを顧客に追加することができます。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "メールアドレス"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "概要"
+                  },
+                  "default_card": {
+                    "type": "string",
+                    "description": "保持しているカードID"
+                  },
+                  "card": {
+                    "type": "string",
+                    "description": "トークンID(トークンIDを指定)"
+                  },
+                  "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新されたCustomerオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/customer"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "顧客を削除",
+        "description": "顧客を削除します。顧客に紐付く定期課金がある場合は、同時にそれらの定期課金も削除されます。",
+        "responses": {
+          "200": {
+            "description": "削除結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/deleteResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{customer}/cards": {
+      "parameters": [
+        {"$ref": "#/components/parameters/customer"}
+      ],
+      "post": {
+        "summary": "顧客のカードを作成",
+        "description": "トークンIDを指定して、新たにカードを追加します。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card": {
+                    "type": "string",
+                    "description": "トークンID"
+                  },
+                  "metadata": {"$ref": "./base.json#/components/schemas/metadata"},
+                  "default": {
+                    "type": "boolean",
+                    "description": "メイン利用のカードに設定するかどうか"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "作成されたCardオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/card"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "顧客のカードリストを取得",
+        "description": "顧客の保持しているカードリストを取得します。リストは、直近で生成された順番に取得されます。",
+        "parameters": [
+          {"$ref": "./base.json#/components/parameters/limit"},
+          {"$ref": "./base.json#/components/parameters/offset"},
+          {"$ref": "./base.json#/components/parameters/since"},
+          {"$ref": "./base.json#/components/parameters/until"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Cardオブジェクトのリスト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "./base.json#/components/schemas/list"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "description": "オブジェクトの配列",
+                          "items": {"$ref": "#/components/schemas/card"}
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{customer}/cards/{card}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/customer"},
+        {
+          "name": "card",
+          "in": "path",
+          "description": "カードID",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "car_6845da1a8651f889bc432362dfcb"
+          }
+        }
+      ],
+      "get": {
+        "summary": "顧客のカード情報を取得",
+        "description": "顧客の特定のカード情報を取得します。",
+        "responses": {
+          "200": {
+            "description": "Cardオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/card"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "顧客のカードを更新",
+        "description": "顧客の特定のカード情報を更新します。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "address_state": {
+                    "type": "string",
+                    "description": "都道府県"
+                  },
+                  "address_city": {
+                    "type": "string",
+                    "description": "市区町村"
+                  },
+                  "address_line1": {
+                    "type": "string",
+                    "description": "番地など"
+                  },
+                  "address_line2": {
+                    "type": "string",
+                    "description": "建物名など"
+                  },
+                  "address_zip": {
+                    "type": "string",
+                    "description": "郵便番号"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "2桁のISOコード(e.g. JP)"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "カード保有者名"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "メールアドレス"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "E.164形式の電話番号"
+                  },
+                  "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新されたCardオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/card"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "顧客のカードを削除",
+        "description": "顧客の特定のカードを削除します。",
+        "responses": {
+          "200": {
+            "description": "削除結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/deleteResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "customer": {
+        "name": "customer",
+        "in": "path",
+        "description": "顧客ID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "cus_121673955bd7aa144de5a8f6c262"
+        }
+      }
+    },
+    "schemas": {
+      "customer": {
+        "type": "object",
+        "description": "Customerオブジェクト",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "固定文字列",
+            "enum": ["customer"]
+          },
+          "id": {
+            "type": "string",
+            "description": "一意なオブジェクトを示す文字列",
+            "example": "cus_121673955bd7aa144de5a8f6c262"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "本番環境かどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "この顧客作成時のUTCタイムスタンプ"
+          },
+          "default_card": {
+            "type": "string", "nullable": true,
+            "description": "支払いにデフォルトで使用されるカードのID"
+          },
+          "cards": {
+            "allOf": [
+              {"$ref": "./base.json#/components/schemas/list"},
+              {
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "description": "オブジェクトの配列",
+                    "items": {"$ref": "#/components/schemas/card"}
+                  }
+                }
+              }
+            ]
+          },
+          "email": {
+            "type": "string", "nullable": true,
+            "description": "メールアドレス"
+          },
+          "description": {
+            "type": "string", "nullable": true,
+            "description": "概要"
+          },
+          "subscriptions": {
+            "allOf": [
+              {"$ref": "./base.json#/components/schemas/list"},
+              {
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "description": "オブジェクトの配列",
+                    "items": {"$ref": "./subscription.json#/components/schemas/subscription"}
+                  }
+                }
+              }
+            ]
+          },
+          "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+        },
+        "required": ["object", "id", "livemode", "created"]
+      },
+      "card": {
+        "type": "object",
+        "description": "クレジットカードの情報を表すcardオブジェクト",
+        "properties": {
+          "object": {
+            "type": "string",
+            "description": "固定文字列",
+            "enum": ["card"]
+          },
+          "id": {
+            "type": "string",
+            "description": "car_で始まり一意なオブジェクトを示す文字列",
+            "example": "car_6845da1a8651f889bc432362dfcb"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "本番環境かどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "カード作成時のタイムスタンプ"
+          },
+          "name": {
+            "type": "string", "nullable": true,
+            "description": "カード保有者名"
+          },
+          "last4": {
+            "type": "string",
+            "example": "4242",
+            "description": "カード番号の下四桁"
+          },
+          "country": {
+            "type": "string",
+            "nullable": true,
+            "description": "2桁のISOコード(e.g. JP)"
+          },
+          "exp_month": {
+            "type": "integer",
+            "description": "有効期限月"
+          },
+          "exp_year": {
+            "type": "integer",
+            "description": "有効期限年"
+          },
+          "brand": {
+            "type": "string",
+            "description": "カードブランド名",
+            "enum": [
+              "Visa",
+              "MasterCard",
+              "JCB",
+              "American Express",
+              "Diners Club",
+              "Discover"
+            ]
+          },
+          "address_city": {
+            "type": "string", "nullable": true,
+            "description": "請求先住所（市区町村）"
+          },
+          "address_line1": {
+            "type": "string", "nullable": true,
+            "description": "請求先住所（番地）"
+          },
+          "address_line2": {
+            "type": "string", "nullable": true,
+            "description": "請求先住所（建物名）"
+          },
+          "address_state": {
+            "type": "string", "nullable": true,
+            "description": "請求先住所（都道府県）"
+          },
+          "address_zip": {
+            "type": "string", "nullable": true,
+            "description": "請求先住所（郵便番号）"
+          },
+          "address_zip_check": {
+            "type": "string",
+            "description": "郵便番号の検証結果",
+            "enum": ["passed", "failed", "unchecked"]
+          },
+          "cvc_check": {
+            "type": "string",
+            "description": "セキュリティコードの検証結果",
+            "enum": ["passed", "failed", "unchecked"]
+          },
+          "customer": {
+            "type": "string", "nullable": true,
+            "description": "このカードを保有する顧客ID"
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "このクレジットカード番号に紐づく値。\n同一番号のカードからは同一の値が生成されることが保証されており、 トークン化の度にトークンIDは変わりますが、この値は変わりません。\n"
+          },
+          "metadata": {"$ref": "./base.json#/components/schemas/metadata"},
+          "three_d_secure_status": {
+            "type": "string", "nullable": true,
+            "description": "3Dセキュアの利用状況",
+            "enum": ["available", "unavailable", null]
+          },
+          "email": {
+            "type": "string", "nullable": true,
+            "description": "メールアドレス\n2024年8月以降、3Dセキュア認証の際にphoneまたはemailのデータ入力が求められます。\n"
+          },
+          "phone": {
+            "type": "string", "nullable": true,
+            "description": "E.164形式の電話番号 (e.g. 090-0123-4567（日本） => \"+819001234567\")\n2024年8月以降、3Dセキュア認証の際にphoneまたはemailのデータ入力が求められます。\n"
+          }
+        },
+        "required": ["id", "object", "livemode", "created", "last4", "brand", "exp_month", "exp_year", "fingerprint"]
+      }
+    }
+  }
+}

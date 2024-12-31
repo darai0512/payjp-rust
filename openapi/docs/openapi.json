@@ -1,0 +1,5063 @@
+{
+   "components": {
+      "parameters": {
+         "balance": {
+            "description": "ba_で始まる残高オブジェクトのID",
+            "in": "path",
+            "name": "balance",
+            "required": true,
+            "schema": {
+               "example": "ba_013f3c308b771358605dd2445d60f",
+               "type": "string"
+            }
+         },
+         "charge": {
+            "description": "支払いID",
+            "in": "path",
+            "name": "charge",
+            "required": true,
+            "schema": {
+               "example": "ch_fa990a4c10672a93053a774730b0a",
+               "type": "string"
+            }
+         },
+         "customer": {
+            "description": "顧客ID",
+            "in": "path",
+            "name": "customer",
+            "required": true,
+            "schema": {
+               "example": "cus_121673955bd7aa144de5a8f6c262",
+               "type": "string"
+            }
+         },
+         "limit": {
+            "description": "取得するデータ数の最大値(1~100まで)。指定がない場合は 10 となる。",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+               "default": 10,
+               "maximum": 100,
+               "minimum": 1,
+               "type": "integer"
+            }
+         },
+         "offset": {
+            "description": "基準点からのデータ取得を行う開始位置。指定がない場合は 0 となる。",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+               "default": 0,
+               "minimum": 0,
+               "type": "integer"
+            }
+         },
+         "since": {
+            "description": "ここに指定したタイムスタンプ以降に作成されたデータを取得",
+            "in": "query",
+            "name": "since",
+            "schema": {
+               "format": "int64",
+               "type": "integer"
+            }
+         },
+         "statement": {
+            "description": "statement ID",
+            "in": "path",
+            "name": "statement",
+            "required": true,
+            "schema": {
+               "example": "st_178fd25dc7ab7b75906f5d4c4b0e6",
+               "type": "string"
+            }
+         },
+         "subscription": {
+            "description": "定期課金ID",
+            "in": "path",
+            "name": "subscription",
+            "required": true,
+            "schema": {
+               "example": "sub_567a1e44562932ec1a7682d746e0",
+               "type": "string"
+            }
+         },
+         "tenant": {
+            "description": "テナントID",
+            "in": "path",
+            "name": "tenant",
+            "required": true,
+            "schema": {
+               "example": "test_tenant",
+               "type": "string"
+            }
+         },
+         "until": {
+            "description": "ここに指定したタイムスタンプ以前に作成されたデータを取得",
+            "in": "query",
+            "name": "until",
+            "schema": {
+               "format": "int64",
+               "type": "integer"
+            }
+         }
+      },
+      "schemas": {
+         "account": {
+            "description": "Accountオブジェクト",
+            "properties": {
+               "created": {
+                  "description": "このアカウント作成時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "email": {
+                  "description": "メールアドレス",
+                  "example": "liveaccount@example.com",
+                  "type": "string"
+               },
+               "id": {
+                  "description": "acct_で始まる一意なオブジェクトを示す文字列",
+                  "example": "acct_8a27db83a7bf11a0c12b0c2833f",
+                  "type": "string"
+               },
+               "merchant": {
+                  "$ref": "#/components/schemas/merchant"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "account"
+                  ],
+                  "type": "string"
+               },
+               "team_id": {
+                  "description": "このアカウントに紐付くチームID",
+                  "nullable": true,
+                  "type": "string"
+               }
+            },
+            "required": [
+               "object",
+               "id",
+               "email",
+               "created",
+               "merchant"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/accounts"
+               }
+            ]
+         },
+         "balance": {
+            "$dynamicAnchor": "payjpObject",
+            "description": "Balanceオブジェクト",
+            "properties": {
+               "bank_info": {
+                  "$ref": "#/components/schemas/bank_info",
+                  "description": "入金先口座情報"
+               },
+               "closed": {
+                  "description": "このBalanceの清算が終了していればtrue",
+                  "type": "boolean"
+               },
+               "closed_date": {
+                  "description": "精算が終了した日時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "created": {
+                  "description": "オブジェクト作成時刻のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "due_date": {
+                  "description": "入金予定日/請求期限日のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "id": {
+                  "description": "ba_で始まる一意なオブジェクトを示す文字列",
+                  "example": "ba_013f3c308b771358605dd2445d60f",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "net": {
+                  "description": "関連付けられているStatementの総額",
+                  "type": "integer"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "balance"
+                  ],
+                  "type": "string"
+               },
+               "state": {
+                  "description": "Balanceの状態",
+                  "enum": [
+                     "collecting",
+                     "transfer",
+                     "claim"
+                  ],
+                  "type": "string"
+               },
+               "statements": {
+                  "description": "関連付けられているStatementオブジェクトのリスト",
+                  "items": {
+                     "$ref": "#/components/schemas/statement"
+                  },
+                  "type": "array"
+               },
+               "tenant_id": {
+                  "description": "オブジェクトを所有するTenantのID",
+                  "nullable": true,
+                  "type": "string"
+               }
+            },
+            "required": [
+               "object",
+               "id",
+               "livemode",
+               "created",
+               "net",
+               "statements",
+               "state",
+               "closed"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/balances"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/balances/{balance}"
+               },
+               {
+                  "method_name": "statementUrls",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/balances/{balance}/statement_urls"
+               }
+            ]
+         },
+         "bank_info": {
+            "description": "入金先口座情報",
+            "properties": {
+               "bank_account_holder_name": {
+                  "description": "口座名義",
+                  "type": "string"
+               },
+               "bank_account_number": {
+                  "description": "口座番号",
+                  "type": "string"
+               },
+               "bank_account_status": {
+                  "description": "最新振込結果",
+                  "enum": [
+                     "success",
+                     "failed",
+                     "pending"
+                  ],
+                  "type": "string"
+               },
+               "bank_account_type": {
+                  "description": "口座種別",
+                  "type": "string"
+               },
+               "bank_branch_code": {
+                  "description": "支店番号",
+                  "type": "string"
+               },
+               "bank_code": {
+                  "description": "銀行コード",
+                  "type": "string"
+               }
+            },
+            "required": [
+               "bank_code",
+               "bank_branch_code",
+               "bank_account_type",
+               "bank_account_number",
+               "bank_account_holder_name",
+               "bank_account_status"
+            ],
+            "type": "object"
+         },
+         "card": {
+            "description": "クレジットカードの情報を表すcardオブジェクト",
+            "properties": {
+               "address_city": {
+                  "description": "請求先住所（市区町村）",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "address_line1": {
+                  "description": "請求先住所（番地）",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "address_line2": {
+                  "description": "請求先住所（建物名）",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "address_state": {
+                  "description": "請求先住所（都道府県）",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "address_zip": {
+                  "description": "請求先住所（郵便番号）",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "address_zip_check": {
+                  "description": "郵便番号の検証結果",
+                  "enum": [
+                     "passed",
+                     "failed",
+                     "unchecked"
+                  ],
+                  "type": "string"
+               },
+               "brand": {
+                  "description": "カードブランド名",
+                  "enum": [
+                     "Visa",
+                     "MasterCard",
+                     "JCB",
+                     "American Express",
+                     "Diners Club",
+                     "Discover"
+                  ],
+                  "type": "string"
+               },
+               "country": {
+                  "description": "2桁のISOコード(e.g. JP)",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "created": {
+                  "description": "カード作成時のタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "customer": {
+                  "description": "このカードを保有する顧客ID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "cvc_check": {
+                  "description": "セキュリティコードの検証結果",
+                  "enum": [
+                     "passed",
+                     "failed",
+                     "unchecked"
+                  ],
+                  "type": "string"
+               },
+               "email": {
+                  "description": "メールアドレス\n2024年8月以降、3Dセキュア認証の際にphoneまたはemailのデータ入力が求められます。\n",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "exp_month": {
+                  "description": "有効期限月",
+                  "type": "integer"
+               },
+               "exp_year": {
+                  "description": "有効期限年",
+                  "type": "integer"
+               },
+               "fingerprint": {
+                  "description": "このクレジットカード番号に紐づく値。\n同一番号のカードからは同一の値が生成されることが保証されており、 トークン化の度にトークンIDは変わりますが、この値は変わりません。\n",
+                  "type": "string"
+               },
+               "id": {
+                  "description": "car_で始まり一意なオブジェクトを示す文字列",
+                  "example": "car_6845da1a8651f889bc432362dfcb",
+                  "type": "string"
+               },
+               "last4": {
+                  "description": "カード番号の下四桁",
+                  "example": "4242",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "metadata": {
+                  "$ref": "#/components/schemas/metadata"
+               },
+               "name": {
+                  "description": "カード保有者名",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "card"
+                  ],
+                  "type": "string"
+               },
+               "phone": {
+                  "description": "E.164形式の電話番号 (e.g. 090-0123-4567（日本） => \"+819001234567\")\n2024年8月以降、3Dセキュア認証の際にphoneまたはemailのデータ入力が求められます。\n",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "three_d_secure_status": {
+                  "description": "3Dセキュアの利用状況",
+                  "enum": [
+                     "available",
+                     "unavailable",
+                     null
+                  ],
+                  "nullable": true,
+                  "type": "string"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "created",
+               "last4",
+               "brand",
+               "exp_month",
+               "exp_year",
+               "fingerprint"
+            ],
+            "type": "object"
+         },
+         "charge": {
+            "description": "chargeオブジェクト",
+            "properties": {
+               "amount": {
+                  "description": "支払い額",
+                  "type": "integer"
+               },
+               "amount_refunded": {
+                  "description": "この支払いに対しての返金額",
+                  "type": "integer"
+               },
+               "captured": {
+                  "description": "支払い処理を確定しているかどうか",
+                  "type": "boolean"
+               },
+               "captured_at": {
+                  "description": "支払い処理確定時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "card": {
+                  "$ref": "#/components/schemas/card"
+               },
+               "created": {
+                  "description": "この支払い作成時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "currency": {
+                  "description": "3文字のISOコード(現状 \"jpy\" のみサポート)",
+                  "enum": [
+                     "jpy"
+                  ],
+                  "type": "string"
+               },
+               "customer": {
+                  "description": "顧客ID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "description": {
+                  "description": "概要",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "expired_at": {
+                  "description": "認証状態が自動的に失効される日時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "failure_code": {
+                  "description": "失敗した支払いのエラーコード",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "failure_message": {
+                  "description": "失敗した支払いの説明",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "fee_rate": {
+                  "description": "決済手数料率",
+                  "type": "string"
+               },
+               "id": {
+                  "description": "ch_で始まる一意なオブジェクトを示す文字列",
+                  "example": "ch_fa990a4c10672a93053a774730b0a",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "metadata": {
+                  "additionalProperties": {
+                     "type": "string"
+                  },
+                  "description": "キーバリューの任意データ",
+                  "nullable": true,
+                  "type": "object"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "charge"
+                  ],
+                  "type": "string"
+               },
+               "paid": {
+                  "description": "認証処理が成功しているかどうか。",
+                  "type": "boolean"
+               },
+               "platform_fee": {
+                  "description": "[PAY.JP Platform](#platform-api) のみ\n\nプラットフォーマーに振り分けられる入金金額。",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "platform_fee_rate": {
+                  "description": "[PAY.JP Platform](#platform-api)のみ\n\n[テナント作成](#テナントを作成)時に指定したプラットフォーム利用料率(%)",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "refund_reason": {
+                  "description": "返金理由",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "refunded": {
+                  "description": "返金済みかどうか",
+                  "type": "boolean"
+               },
+               "subscription": {
+                  "description": "sub_から始まる定期課金のID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "tenant": {
+                  "description": "[PAY.JP Platform](#platform-api)のみ\n\nテナントID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "term_id": {
+                  "description": "[入金管理オブジェクトの刷新に伴い、2024/06/01以降に提供されます。](https://pay.jp/docs/migrate-transfer)\n\nこの支払いが関連付けられたTermオブジェクトのID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "three_d_secure_status": {
+                  "description": "3Dセキュアの実施状況",
+                  "enum": [
+                     "unverified",
+                     "verified",
+                     "attempted",
+                     "failed",
+                     "error",
+                     null
+                  ],
+                  "nullable": true,
+                  "type": "string"
+               },
+               "total_platform_fee": {
+                  "description": "[PAY.JP Platform](#platform-api)のみ\n\nプラットフォーム利用料総額",
+                  "nullable": true,
+                  "type": "integer"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "created",
+               "amount",
+               "currency",
+               "paid",
+               "captured",
+               "card"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/charges"
+               },
+               {
+                  "method_name": "create",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/charges"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/charges/{charge}"
+               },
+               {
+                  "method_name": "update",
+                  "method_type": "update",
+                  "operation": "post",
+                  "path": "/charges/{charge}"
+               },
+               {
+                  "method_name": "tdsFinish",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/charges/{charge}/tds_finish"
+               },
+               {
+                  "method_name": "refund",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/charges/{charge}/refund"
+               },
+               {
+                  "method_name": "reauth",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/charges/{charge}/reauth"
+               },
+               {
+                  "method_name": "capture",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/charges/{charge}/capture"
+               }
+            ]
+         },
+         "customer": {
+            "description": "Customerオブジェクト",
+            "properties": {
+               "cards": {
+                  "allOf": [
+                     {
+                        "$ref": "#/components/schemas/list"
+                     },
+                     {
+                        "properties": {
+                           "data": {
+                              "description": "オブジェクトの配列",
+                              "items": {
+                                 "$ref": "#/components/schemas/card"
+                              },
+                              "type": "array"
+                           }
+                        }
+                     }
+                  ]
+               },
+               "created": {
+                  "description": "この顧客作成時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "default_card": {
+                  "description": "支払いにデフォルトで使用されるカードのID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "description": {
+                  "description": "概要",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "email": {
+                  "description": "メールアドレス",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "id": {
+                  "description": "一意なオブジェクトを示す文字列",
+                  "example": "cus_121673955bd7aa144de5a8f6c262",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "metadata": {
+                  "$ref": "#/components/schemas/metadata"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "customer"
+                  ],
+                  "type": "string"
+               },
+               "subscriptions": {
+                  "allOf": [
+                     {
+                        "$ref": "#/components/schemas/list"
+                     },
+                     {
+                        "properties": {
+                           "data": {
+                              "description": "オブジェクトの配列",
+                              "items": {
+                                 "$ref": "#/components/schemas/subscription"
+                              },
+                              "type": "array"
+                           }
+                        }
+                     }
+                  ]
+               }
+            },
+            "required": [
+               "object",
+               "id",
+               "livemode",
+               "created"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/customers"
+               },
+               {
+                  "method_name": "create",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/customers"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/customers/{customer}"
+               },
+               {
+                  "method_name": "update",
+                  "method_type": "update",
+                  "operation": "post",
+                  "path": "/customers/{customer}"
+               },
+               {
+                  "method_name": "delete",
+                  "method_type": "delete",
+                  "operation": "delete",
+                  "path": "/customers/{customer}"
+               },
+               {
+                  "method_name": "list_card",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/customers/{customer}/cards"
+               },
+               {
+                  "method_name": "create_card",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/customers/{customer}/cards"
+               },
+               {
+                  "method_name": "retrieve_card",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/customers/{customer}/cards/{card}"
+               },
+               {
+                  "method_name": "update_card",
+                  "method_type": "update",
+                  "operation": "post",
+                  "path": "/customers/{customer}/cards/{card}"
+               },
+               {
+                  "method_name": "delete_card",
+                  "method_type": "delete",
+                  "operation": "delete",
+                  "path": "/customers/{customer}/cards/{card}"
+               }
+            ]
+         },
+         "deleteResponse": {
+            "properties": {
+               "deleted": {
+                  "description": "常に`true`",
+                  "example": true,
+                  "type": "boolean"
+               },
+               "id": {
+                  "description": "削除したオブジェクトのID",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               }
+            },
+            "required": [
+               "deleted",
+               "id",
+               "livemode"
+            ],
+            "type": "object"
+         },
+         "error": {
+            "description": "エラーオブジェクト",
+            "properties": {
+               "error": {
+                  "properties": {
+                     "charge": {
+                        "description": "エラーに関連する支払いID",
+                        "type": "string"
+                     },
+                     "code": {
+                        "description": "詳細なエラー内容の識別子が入ります",
+                        "enum": [
+                           "invalid_number",
+                           "invalid_cvc",
+                           "invalid_expiration_date",
+                           "incorrect_card_data",
+                           "invalid_expiry_month",
+                           "invalid_expiry_year",
+                           "expired_card",
+                           "card_declined",
+                           "card_flagged",
+                           "processing_error",
+                           "missing_card",
+                           "unacceptable_brand",
+                           "invalid_id",
+                           "no_api_key",
+                           "invalid_api_key",
+                           "invalid_plan",
+                           "invalid_expiry_days",
+                           "unnecessary_expiry_days",
+                           "invalid_flexible_id",
+                           "invalid_timestamp",
+                           "invalid_trial_end",
+                           "invalid_string_length",
+                           "invalid_country",
+                           "invalid_currency",
+                           "invalid_address_zip",
+                           "invalid_amount",
+                           "invalid_plan_amount",
+                           "invalid_card",
+                           "invalid_card_name",
+                           "invalid_card_country",
+                           "invalid_card_address_zip",
+                           "invalid_card_address_state",
+                           "invalid_card_address_city",
+                           "invalid_card_address_line",
+                           "invalid_customer",
+                           "invalid_boolean",
+                           "invalid_email",
+                           "no_allowed_param",
+                           "no_param",
+                           "invalid_querystring",
+                           "missing_param",
+                           "invalid_param_key",
+                           "no_payment_method",
+                           "payment_method_duplicate",
+                           "payment_method_duplicate_including_customer",
+                           "failed_payment",
+                           "invalid_refund_amount",
+                           "already_refunded",
+                           "invalid_amount_to_not_captured",
+                           "refund_amount_gt_net",
+                           "capture_amount_gt_net",
+                           "invalid_refund_reason",
+                           "already_captured",
+                           "cant_capture_refunded_charge",
+                           "cant_reauth_refunded_charge",
+                           "charge_expired",
+                           "already_exist_id",
+                           "token_already_used",
+                           "already_have_card",
+                           "dont_has_this_card",
+                           "doesnt_have_card",
+                           "already_have_the_same_card",
+                           "invalid_interval",
+                           "invalid_trial_days",
+                           "invalid_billing_day",
+                           "billing_day_for_non_monthly_plan",
+                           "exist_subscribers",
+                           "already_subscribed",
+                           "already_canceled",
+                           "already_paused",
+                           "subscription_worked",
+                           "cannot_change_prorate_status",
+                           "too_many_metadata_keys",
+                           "invalid_metadata_key",
+                           "invalid_metadata_value",
+                           "apple_pay_disabled_in_livemode",
+                           "invalid_apple_pay_token",
+                           "test_card_on_livemode",
+                           "not_activated_account",
+                           "payjp_wrong",
+                           "pg_wrong",
+                           "not_found",
+                           "not_allowed_method",
+                           "over_capacity",
+                           "refund_limit_exceeded",
+                           "cannot_prorated_refund_of_subscription",
+                           "three_d_secure_incompleted",
+                           "three_d_secure_failed",
+                           "not_in_three_d_secure_flow",
+                           "unverified_token",
+                           "invalid_owner_type"
+                        ],
+                        "type": "string"
+                     },
+                     "message": {
+                        "description": "エラーメッセージ。これは事業者向けの内容となっており、エンドユーザーへ提示する内容として利用することは推奨しておりません。",
+                        "type": "string"
+                     },
+                     "param": {
+                        "description": "エラーに関連するパラメータ名",
+                        "nullable": true,
+                        "type": "string"
+                     },
+                     "status": {
+                        "description": "HTTPステータスコードと同様の値が数値型で入ります",
+                        "enum": [
+                           200,
+                           400,
+                           401,
+                           402,
+                           404,
+                           429,
+                           500
+                        ],
+                        "type": "integer"
+                     },
+                     "type": {
+                        "description": "大まかなエラー種別が入ります",
+                        "enum": [
+                           "client_error",
+                           "card_error",
+                           "server_error",
+                           "not_allowed_method_error",
+                           "auth_error",
+                           "invalid_request_error"
+                        ],
+                        "type": "string"
+                     }
+                  },
+                  "required": [
+                     "status",
+                     "type",
+                     "message"
+                  ],
+                  "type": "object"
+               }
+            },
+            "required": [
+               "error"
+            ],
+            "type": "object"
+         },
+         "event": {
+            "description": "eventオブジェクト",
+            "properties": {
+               "created": {
+                  "description": "このイベント作成時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "data": {
+                  "description": "このイベントに関連したリソースオブジェクト todo generics????",
+                  "type": "object"
+               },
+               "id": {
+                  "description": "evnt_で始まる一意なオブジェクトを示す文字列",
+                  "example": "evnt_54db4d63c7886256acdbc784ccf",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "object": {
+                  "description": "\"event\"の固定文字列",
+                  "enum": [
+                     "event"
+                  ],
+                  "type": "string"
+               },
+               "pending_webhooks": {
+                  "description": "設定されたURLへの通知が完了していない(2xxのレスポンスが得られていない)webhookの数",
+                  "type": "integer"
+               },
+               "type": {
+                  "description": "このイベントのタイプ。値の種類については[こちら](https://pay.jp/docs/webhook#%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88)",
+                  "enum": [
+                     "charge.succeeded",
+                     "charge.failed",
+                     "charge.updated",
+                     "charge.refunded",
+                     "charge.captured",
+                     "dispute.created",
+                     "token.created",
+                     "customer.created",
+                     "customer.updated",
+                     "customer.deleted",
+                     "customer.card.created",
+                     "customer.card.updated",
+                     "customer.card.deleted",
+                     "plan.created",
+                     "plan.updated",
+                     "plan.deleted",
+                     "subscription.created",
+                     "subscription.updated",
+                     "subscription.deleted",
+                     "subscription.paused",
+                     "subscription.resumed",
+                     "subscription.canceled",
+                     "subscription.renewed",
+                     "transfer.succeeded",
+                     "tenant.created",
+                     "tenant.deleted",
+                     "tenant.updated",
+                     "tenant_transfer.succeeded",
+                     "term.created",
+                     "term.closed",
+                     "statement.created",
+                     "balance.created",
+                     "balance.fixed",
+                     "balance.closed",
+                     "balance.merged"
+                  ],
+                  "type": "string"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "created",
+               "type",
+               "data"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/events"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/events/{event}"
+               }
+            ]
+         },
+         "list": {
+            "description": "Listオブジェクト",
+            "properties": {
+               "count": {
+                  "description": "取得されたオブジェクトの総数",
+                  "type": "integer"
+               },
+               "data": {
+                  "description": "オブジェクトの配列",
+                  "items": {
+                     "$dynamicRef": "#payjpObject"
+                  },
+                  "type": "array"
+               },
+               "has_more": {
+                  "description": "さらにデータがあるかどうか",
+                  "type": "boolean"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "list"
+                  ],
+                  "type": "string"
+               },
+               "url": {
+                  "description": "APIエンドポイントのURL",
+                  "type": "string"
+               }
+            },
+            "required": [
+               "object",
+               "data",
+               "url",
+               "has_more",
+               "count"
+            ],
+            "type": "object"
+         },
+         "merchant": {
+            "description": "Merchantオブジェクト",
+            "properties": {
+               "bank_enabled": {
+                  "description": "入金先銀行口座情報が設定済みかどうか",
+                  "type": "boolean"
+               },
+               "brands_accepted": {
+                  "description": "本番環境で利用可能なカードブランドのリスト",
+                  "items": {
+                     "enum": [
+                        "Visa",
+                        "MasterCard",
+                        "JCB",
+                        "American Express",
+                        "Diners Club",
+                        "Discover"
+                     ],
+                     "type": "string"
+                  },
+                  "type": "array"
+               },
+               "business_type": {
+                  "description": "業務形態",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "charge_type": {
+                  "description": "支払い方法種別のリスト",
+                  "items": {
+                     "type": "string"
+                  },
+                  "nullable": true,
+                  "type": "array"
+               },
+               "country": {
+                  "description": "所在国",
+                  "example": "JP",
+                  "type": "string"
+               },
+               "created": {
+                  "description": "登録日時",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "currencies_supported": {
+                  "description": "対応通貨のリスト",
+                  "example": [
+                     "jpy"
+                  ],
+                  "items": {
+                     "enum": [
+                        "jpy"
+                     ],
+                     "type": "string"
+                  },
+                  "type": "array"
+               },
+               "default_currency": {
+                  "description": "3文字のISOコード（現状 \"jpy\" のみサポート）",
+                  "enum": [
+                     "jpy"
+                  ],
+                  "type": "string"
+               },
+               "details_submitted": {
+                  "description": "本番環境申請情報が提出済みかどうか",
+                  "type": "boolean"
+               },
+               "id": {
+                  "description": "acct_mch_で始まる一意なオブジェクトを示す文字列",
+                  "example": "acct_mch_21a96cb898ceb6db0932983",
+                  "type": "string"
+               },
+               "livemode_activated_at": {
+                  "description": "本番環境が許可された日時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "livemode_enabled": {
+                  "description": "本番環境が有効かどうか",
+                  "type": "boolean"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "merchant"
+                  ],
+                  "type": "string"
+               },
+               "product_name": {
+                  "description": "販売商品名",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "product_type": {
+                  "description": "販売商品の種類リスト",
+                  "items": {
+                     "type": "string"
+                  },
+                  "nullable": true,
+                  "type": "array"
+               },
+               "site_published": {
+                  "description": "申請対象のサイトがオープン済みかどうか",
+                  "nullable": true,
+                  "type": "boolean"
+               }
+            },
+            "required": [
+               "object",
+               "id",
+               "bank_enabled",
+               "brands_accepted",
+               "currencies_supported",
+               "default_currency",
+               "details_submitted",
+               "country",
+               "livemode_enabled",
+               "created"
+            ],
+            "type": "object"
+         },
+         "metadata": {
+            "additionalProperties": {
+               "type": "string"
+            },
+            "description": "キーバリューの任意データ",
+            "type": "object"
+         },
+         "plan": {
+            "description": "planオブジェクト",
+            "properties": {
+               "amount": {
+                  "description": "プランの料金",
+                  "type": "integer"
+               },
+               "billing_day": {
+                  "description": "課金日。1から31の整数で指定可能。nullの場合は課金日を指定しない。",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "created": {
+                  "description": "プラン作成時のタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "currency": {
+                  "description": "3文字のISOコード(現状 \"jpy\" のみサポート)",
+                  "example": "jpy",
+                  "type": "string"
+               },
+               "id": {
+                  "description": "`pln_`で始まる一意なオブジェクトを示す文字列",
+                  "example": "pln_9589006d14aad86aafeceac06b60",
+                  "type": "string"
+               },
+               "interval": {
+                  "description": "課金の間隔。`day`, `week`, `month`, `year` のいずれか。",
+                  "enum": [
+                     "day",
+                     "week",
+                     "month",
+                     "year"
+                  ],
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "metadata": {
+                  "additionalProperties": {
+                     "type": "string"
+                  },
+                  "description": "キーバリューの任意データ",
+                  "type": "object"
+               },
+               "name": {
+                  "description": "プラン名",
+                  "type": "string"
+               },
+               "object": {
+                  "description": "\"plan\"の固定文字列",
+                  "example": "plan",
+                  "type": "string"
+               },
+               "trial_days": {
+                  "description": "トライアル期間の日数",
+                  "type": "integer"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "created",
+               "amount",
+               "currency",
+               "interval",
+               "name",
+               "trial_days"
+            ],
+            "type": "object"
+         },
+         "statement": {
+            "description": "Statementオブジェクト",
+            "properties": {
+               "balance_id": {
+                  "description": "このStatementが関連付けられているBalanceのID",
+                  "example": "ba_013f3c308b771358605dd2445d60f",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "created": {
+                  "description": "作成時刻のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "id": {
+                  "description": "オブジェクトのユニークID",
+                  "example": "st_178fd25dc7ab7b75906f5d4c4b0e6",
+                  "type": "string"
+               },
+               "items": {
+                  "description": "statement_itemオブジェクトのリスト",
+                  "items": {
+                     "$ref": "#/components/schemas/statement_item"
+                  },
+                  "type": "array"
+               },
+               "livemode": {
+                  "description": "livemodeオブジェクトならtrue",
+                  "example": "ba_013f3c308b771358605dd2445d60f",
+                  "type": "boolean"
+               },
+               "net": {
+                  "description": "含まれるstatement_itemの金額合計",
+                  "type": "integer"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "statement"
+                  ],
+                  "type": "string"
+               },
+               "tenant_id": {
+                  "description": "オブジェクトを所有するTenantのID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "term": {
+                  "allOf": [
+                     {
+                        "$ref": "#/components/schemas/term"
+                     },
+                     {
+                        "description": "このStatementの生成元となったTermオブジェクト",
+                        "nullable": true
+                     }
+                  ]
+               },
+               "title": {
+                  "description": "取引明細のタイトル",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "type": {
+                  "description": "取引明細の区分",
+                  "enum": [
+                     "sales",
+                     "service_fee",
+                     "forfeit",
+                     "transfer_fee",
+                     "misc"
+                  ],
+                  "type": "string"
+               },
+               "updated": {
+                  "description": "更新時刻のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               }
+            },
+            "required": [
+               "object",
+               "id",
+               "livemode",
+               "created",
+               "type",
+               "net",
+               "updated",
+               "items"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/statements"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/statements/{statement}"
+               },
+               {
+                  "method_name": "statementUrls",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/statements/{statement}/statement_urls"
+               }
+            ]
+         },
+         "statement_item": {
+            "description": "Statementに含まれる項目",
+            "properties": {
+               "amount": {
+                  "description": "集計された金額\n正の値は加盟店への支払額、負の値は請求額を表します。",
+                  "type": "integer"
+               },
+               "name": {
+                  "description": "Subjectに対応する表示名",
+                  "type": "string"
+               },
+               "subject": {
+                  "description": "集計項目",
+                  "type": "string"
+               },
+               "tax_rate": {
+                  "description": "税率(パーセント表記)。小数点以下2桁までの数値の文字列型。",
+                  "type": "string"
+               }
+            },
+            "required": [
+               "subject",
+               "name",
+               "amount",
+               "tax_rate"
+            ],
+            "type": "object"
+         },
+         "statement_url": {
+            "description": "取引明細ダウンロードURLオブジェクト",
+            "properties": {
+               "expires": {
+                  "description": "有効期限のタイムスタンプ。\n有効期限は発行から1時間です。",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "object": {
+                  "description": "固定値 \"statement_url\"",
+                  "enum": [
+                     "statement_url"
+                  ],
+                  "type": "string"
+               },
+               "url": {
+                  "description": "取引明細書ダウンロードURL",
+                  "type": "string"
+               }
+            },
+            "required": [
+               "object",
+               "url",
+               "expires"
+            ],
+            "type": "object"
+         },
+         "subscription": {
+            "description": "subscriptionオブジェクト",
+            "properties": {
+               "canceled_at": {
+                  "description": "定期課金がキャンセル状態になった時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "created": {
+                  "description": "定期課金作成時のタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "current_period_end": {
+                  "description": "現在の購読期間終了時のタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "current_period_start": {
+                  "description": "現在の購読期間開始時のタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "customer": {
+                  "description": "定期課金を購読している顧客ID",
+                  "type": "string"
+               },
+               "id": {
+                  "description": "`sub_`で始まる一意なオブジェクトを示す文字列",
+                  "example": "sub_567a1e44562932ec1a7682d746e0",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "metadata": {
+                  "additionalProperties": {
+                     "type": "string"
+                  },
+                  "description": "キーバリューの任意データ",
+                  "nullable": true,
+                  "type": "object"
+               },
+               "next_cycle_plan": {
+                  "allOf": [
+                     {
+                        "$ref": "#/components/schemas/plan"
+                     },
+                     {
+                        "description": "次回サイクルのプラン",
+                        "nullable": true
+                     }
+                  ]
+               },
+               "object": {
+                  "description": "\"subscription\"の固定文字列",
+                  "example": "subscription",
+                  "type": "string"
+               },
+               "paused_at": {
+                  "description": "定期課金が停止状態になった時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "plan": {
+                  "$ref": "#/components/schemas/plan"
+               },
+               "prorate": {
+                  "description": "日割り課金が有効かどうか",
+                  "type": "boolean"
+               },
+               "resumed_at": {
+                  "description": "停止またはキャンセル状態の定期課金が有効状態になった時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "start": {
+                  "description": "定期課金開始時のタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "status": {
+                  "description": "`trial`, `active`, `canceled` または `paused` のいずれかの値。",
+                  "enum": [
+                     "trial",
+                     "active",
+                     "canceled",
+                     "paused"
+                  ],
+                  "type": "string"
+               },
+               "trial_end": {
+                  "description": "トライアル期間終了時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "trial_start": {
+                  "description": "トライアル期間開始時のタイムスタンプ",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "created",
+               "start",
+               "customer",
+               "plan",
+               "status",
+               "prorate",
+               "current_period_start",
+               "current_period_end"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/subscriptions"
+               },
+               {
+                  "method_name": "create",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/subscriptions"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/subscriptions/{subscription}"
+               },
+               {
+                  "method_name": "update",
+                  "method_type": "update",
+                  "operation": "post",
+                  "path": "/subscriptions/{subscription}"
+               },
+               {
+                  "method_name": "delete",
+                  "method_type": "delete",
+                  "operation": "delete",
+                  "path": "/subscriptions/{subscription}"
+               },
+               {
+                  "method_name": "pause",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/subscriptions/{subscription}/pause"
+               },
+               {
+                  "method_name": "resume",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/subscriptions/{subscription}/resume"
+               },
+               {
+                  "method_name": "cancel",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/subscriptions/{subscription}/cancel"
+               }
+            ]
+         },
+         "tenant": {
+            "description": "tenantオブジェクト",
+            "properties": {
+               "bank_account_holder_name": {
+                  "description": "口座名義",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "bank_account_number": {
+                  "description": "口座番号",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "bank_account_status": {
+                  "description": "口座状態。pending:未確認, success:入金確認済み, failed:入金不可能",
+                  "enum": [
+                     "pending",
+                     "success",
+                     "failed"
+                  ],
+                  "nullable": true,
+                  "type": "string"
+               },
+               "bank_account_type": {
+                  "description": "預金種別",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "bank_branch_code": {
+                  "description": "3桁の支店コード",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "bank_code": {
+                  "description": "4桁の銀行コード",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "created": {
+                  "description": "定期課金作成時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "currencies_supported": {
+                  "description": "対応通貨のリスト(文字列)",
+                  "items": {
+                     "type": "string"
+                  },
+                  "type": "array"
+               },
+               "default_currency": {
+                  "description": "3文字のISOコード(現状 “jpy” のみサポート)",
+                  "example": "jpy",
+                  "type": "string"
+               },
+               "id": {
+                  "description": "`ten_`で始まる自動生成された一意な文字列、または作成時に指定した任意の文字列",
+                  "example": "test",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "metadata": {
+                  "$ref": "#/components/schemas/metadata"
+               },
+               "minimum_transfer_amount": {
+                  "description": "最低入金額",
+                  "type": "integer"
+               },
+               "object": {
+                  "description": "\"tenant\"の固定文字列",
+                  "example": "tenant",
+                  "type": "string"
+               },
+               "payjp_fee_included": {
+                  "description": "テナントのプラットフォーム利用料にPAY.JP決済手数料を含めるかどうか",
+                  "type": "boolean"
+               },
+               "platform_fee_rate": {
+                  "description": "テナントのプラットフォーム利用料率(%)",
+                  "example": "10.15",
+                  "type": "string"
+               },
+               "reviewed_brands": {
+                  "description": "申請情報を提出済のブランドの各種情報",
+                  "items": {
+                     "properties": {
+                        "available_date": {
+                           "description": "利用可能開始時刻のタイムスタンプ",
+                           "format": "int64",
+                           "nullable": true,
+                           "type": "integer"
+                        },
+                        "brand": {
+                           "description": "ブランド名",
+                           "type": "string"
+                        },
+                        "status": {
+                           "description": "審査ステータス",
+                           "enum": [
+                              "passed",
+                              "in_review",
+                              "declined"
+                           ],
+                           "type": "string"
+                        }
+                     },
+                     "required": [
+                        "brand",
+                        "status"
+                     ],
+                     "type": "object"
+                  },
+                  "type": "array"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "created",
+               "platform_fee_rate",
+               "payjp_fee_included",
+               "minimum_transfer_amount"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/tenants"
+               },
+               {
+                  "method_name": "create",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/tenants"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/tenants/{tenant}"
+               },
+               {
+                  "method_name": "update",
+                  "method_type": "update",
+                  "operation": "post",
+                  "path": "/tenants/{tenant}"
+               },
+               {
+                  "method_name": "delete",
+                  "method_type": "delete",
+                  "operation": "delete",
+                  "path": "/tenants/{tenant}"
+               },
+               {
+                  "method_name": "applicationUrls",
+                  "method_type": "custom",
+                  "operation": "post",
+                  "path": "/tenants/{tenant}/application_urls"
+               }
+            ]
+         },
+         "term": {
+            "description": "Term（集計区間）オブジェクト",
+            "properties": {
+               "charge_count": {
+                  "description": "この区間内で確定された支払いの数",
+                  "type": "integer"
+               },
+               "closed": {
+                  "description": "締め処理が完了済みならTrue",
+                  "type": "boolean"
+               },
+               "dispute_count": {
+                  "description": "この区間内で確定されたチャージバック/チャージバックキャンセルの数",
+                  "type": "integer"
+               },
+               "end_at": {
+                  "description": "区間終了時刻のタイムスタンプ。Termが表す区間はstart_at以上end_at未満の範囲となります。翌サイクルのTermの場合`null`を返します。",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "id": {
+                  "description": "tm_で始まる一意なオブジェクトを示す文字列",
+                  "example": "tm_425000e2a448b39b83480a358fee5",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか。",
+                  "type": "boolean"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "term"
+                  ],
+                  "type": "string"
+               },
+               "refund_count": {
+                  "description": "この区間内で確定された返金の数",
+                  "type": "integer"
+               },
+               "start_at": {
+                  "description": "区間開始時刻のタイムスタンプ",
+                  "example": 1696086000,
+                  "format": "int64",
+                  "type": "integer"
+               }
+            },
+            "required": [
+               "id",
+               "object",
+               "livemode",
+               "start_at",
+               "closed",
+               "charge_count",
+               "refund_count",
+               "dispute_count"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/terms"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/terms/{term}"
+               }
+            ]
+         },
+         "three_d_secure_request": {
+            "description": "three_d_secure_requestオブジェクト",
+            "properties": {
+               "created": {
+                  "description": "3Dセキュアリクエスト作成時のUTCタイムスタンプ",
+                  "format": "int64",
+                  "type": "integer"
+               },
+               "expired_at": {
+                  "description": "3Dセキュアリクエストが期限切れとなった時刻のUTCタイムスタンプ\n3Dセキュア認証が完了していれば値はセットされません。",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "finished_at": {
+                  "description": "認証終了、かつ3Dセキュアリクエストが完了した時のUTCタイムスタンプ\n顧客カードに対する3Dセキュアにおいてはカード会社画面での認証を終えた後にセットされます。",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "id": {
+                  "description": "tdsr_で始まる一意なオブジェクトを示す文字列",
+                  "example": "tdsr_125192559c91c4011c1ff56f50a",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "three_d_secure_request"
+                  ],
+                  "type": "string"
+               },
+               "resource_id": {
+                  "description": "3Dセキュア処理対象リソースのID",
+                  "example": "car_4ec110e0700daf893160424fe03c",
+                  "type": "string"
+               },
+               "result_received_at": {
+                  "description": "認証終了時のUTCタイムスタンプ\nカード会社画面での認証を終えた後にセットされます。",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "started_at": {
+                  "description": "認証開始時のUTCタイムスタンプ\nカード会社画面での認証を始める際にセットされます。",
+                  "format": "int64",
+                  "nullable": true,
+                  "type": "integer"
+               },
+               "state": {
+                  "description": "3Dセキュア認証の現在の状態",
+                  "enum": [
+                     "created",
+                     "in_progress",
+                     "result_received",
+                     "finished"
+                  ],
+                  "type": "string"
+               },
+               "tenant_id": {
+                  "description": "テナントID",
+                  "nullable": true,
+                  "type": "string"
+               },
+               "three_d_secure_status": {
+                  "description": "3Dセキュアの認証結果\n値については`charge.three_d_secure_status`に同じ",
+                  "enum": [
+                     "unverified",
+                     "verified",
+                     "attempted",
+                     "not_supported",
+                     "error",
+                     "failed",
+                     "not_enrolled"
+                  ],
+                  "type": "string"
+               }
+            },
+            "required": [
+               "id",
+               "resource_id",
+               "object",
+               "livemode",
+               "created",
+               "state"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "list",
+                  "method_type": "list",
+                  "operation": "get",
+                  "path": "/three_d_secure_requests"
+               },
+               {
+                  "method_name": "create",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/three_d_secure_requests"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/three_d_secure_requests/{three_d_secure_request}"
+               }
+            ]
+         },
+         "token": {
+            "properties": {
+               "card": {
+                  "$ref": "#/components/schemas/card"
+               },
+               "created": {
+                  "description": "このトークン作成時のタイムスタンプ",
+                  "type": "integer"
+               },
+               "id": {
+                  "description": "tok_で始まる一意なオブジェクトを示す文字列",
+                  "type": "string"
+               },
+               "livemode": {
+                  "description": "本番環境かどうか",
+                  "type": "boolean"
+               },
+               "object": {
+                  "description": "固定文字列",
+                  "enum": [
+                     "token"
+                  ],
+                  "type": "string"
+               },
+               "used": {
+                  "description": "このトークンが使用済みかどうか",
+                  "type": "boolean"
+               }
+            },
+            "required": [
+               "id",
+               "card",
+               "created",
+               "livemode",
+               "object",
+               "used"
+            ],
+            "type": "object",
+            "x-operations": [
+               {
+                  "method_name": "create",
+                  "method_type": "create",
+                  "operation": "post",
+                  "path": "/tokens"
+               },
+               {
+                  "method_name": "retrieve",
+                  "method_type": "retrieve",
+                  "operation": "get",
+                  "path": "/tokens/{token}"
+               }
+            ]
+         }
+      }
+   },
+   "info": {
+      "description": "https://pay.jp/docs/api",
+      "summary": "PAY.JP API (unofficial)",
+      "title": "PAY.JP API",
+      "version": "20241101T12"
+   },
+   "openapi": "3.1.0",
+   "paths": {
+      "/accounts": {
+         "get": {
+            "description": "あなたのアカウント情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/account"
+                        }
+                     }
+                  },
+                  "description": "Accountオブジェクトの詳細情報"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "アカウント情報を取得"
+         }
+      },
+      "/balances": {
+         "get": {
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "入金予定日/振込期限日が指定したタイムスタンプ以降のデータのみ取得",
+                  "in": "query",
+                  "name": "since_due_date",
+                  "schema": {
+                     "format": "int64",
+                     "type": "integer"
+                  }
+               },
+               {
+                  "description": "入金予定日/振込期限日が指定したタイムスタンプ以前のデータのみ取得",
+                  "in": "query",
+                  "name": "until_due_date",
+                  "schema": {
+                     "format": "int64",
+                     "type": "integer"
+                  }
+               },
+               {
+                  "description": "stateが指定した値であるオブジェクトに限定",
+                  "in": "query",
+                  "name": "state",
+                  "schema": {
+                     "enum": [
+                        "collecting",
+                        "transfer",
+                        "claim"
+                     ],
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "closedが指定した値であるオブジェクトに限定",
+                  "in": "query",
+                  "name": "closed",
+                  "schema": {
+                     "type": "boolean"
+                  }
+               },
+               {
+                  "description": "Balanceの所有者で絞り込みます。以下の値が指定できます。`merchant`または`tenant`",
+                  "in": "query",
+                  "name": "owner",
+                  "schema": {
+                     "enum": [
+                        "merchant",
+                        "tenant"
+                     ],
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "指定したテナントが所有者であるオブジェクトに限定",
+                  "in": "query",
+                  "name": "tenant",
+                  "schema": {
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              }
+                           ],
+                           "properties": {
+                              "data": {
+                                 "items": {
+                                    "$ref": "#/components/schemas/balance"
+                                 },
+                                 "type": "array"
+                              }
+                           }
+                        }
+                     }
+                  },
+                  "description": "Balanceオブジェクトのリスト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            }
+         }
+      },
+      "/balances/{balance}": {
+         "get": {
+            "description": "特定の残高オブジェクトを取得します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/balance"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/balance"
+                        }
+                     }
+                  },
+                  "description": "指定したidのBalanceオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "残高を取得"
+         }
+      },
+      "/balances/{balance}/statement_urls": {
+         "post": {
+            "description": "Balanceに含まれるStatementすべての取引明細およびインボイスを一括ダウンロードできる一時URLを発行します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/balance"
+               }
+            ],
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "platformer": {
+                              "default": false,
+                              "description": "`true`を指定するとプラットフォーム手数料に関する明細がダウンロードできるURLを発行します。",
+                              "type": "boolean"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/statement_url"
+                        }
+                     }
+                  },
+                  "description": "取引明細ダウンロードURLオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "取引明細一括ダウンロードURLを発行"
+         }
+      },
+      "/charges": {
+         "get": {
+            "description": "生成した支払い情報のリストを取得します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "絞り込みたい顧客ID",
+                  "in": "query",
+                  "name": "customer",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "絞り込みたい定期課金ID",
+                  "in": "query",
+                  "name": "subscription",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "[PAY.JP Platform](#platform-api)のみ指定可能\n\n絞り込みたいテナントID",
+                  "in": "query",
+                  "name": "tenant",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "[入金管理オブジェクトの刷新に伴い、2024/06/01以降に提供されます。](https://pay.jp/docs/migrate-transfer)\n\n絞り込みたいTermのID",
+                  "in": "query",
+                  "name": "term",
+                  "schema": {
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/charge"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "chargeオブジェクトのlistオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "支払いリストを取得"
+         },
+         "post": {
+            "description": "トークンIDまたはカードを保有している顧客IDを指定して支払いを作成します。\nテスト用のキーでは、本番用の決済ネットワークへは接続されず、実際の請求が行われることもありません。\n本番用のキーでは、決済ネットワークで処理が行われ、実際の請求が行われます。\n\n支払いを確定せずに、カードの認証と支払い額のみ確保する場合は、 `capture` に `false` を指定してください。\nこのとき `expiry_days` を指定することで、認証の期間を定めることができます。 `expiry_days` はデフォルトで7日となっており、1日~60日の間で設定が可能です。なお60日に設定した場合、認証期限は59日後の11:59PM(日本時間)までになります。また確保されました与信枠は、`expiry_days` で設定されました期間を過ぎると解放されるようなっております。\n\n`three_d_secure` にtrueを指定することで、3Dセキュアを開始できます。\n指定した場合、支払いオブジェクトは作成されますが実際の決済処理は保留された状態になります。\n保留中の支払いは、引数指定の内容に関わらず`captured`は`false`、`captured_at`は`null`、`expired_at`は`null`と表示されます。\nなお、支払い作成から30分を経過すると、3Dセキュアフローはタイムアウトし、処理が進められなくなります。\n3Dセキュアの進め方は、 [支払いで3Dセキュアを実施する](https://pay.jp/docs/charge-tds) を参照してください。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "anyOf": [
+                           {
+                              "required": [
+                                 "card"
+                              ]
+                           },
+                           {
+                              "required": [
+                                 "customer"
+                              ]
+                           }
+                        ],
+                        "oneOf": [
+                           {
+                              "required": [
+                                 "amount",
+                                 "currency"
+                              ]
+                           },
+                           {
+                              "required": [
+                                 "product"
+                              ]
+                           }
+                        ],
+                        "properties": {
+                           "amount": {
+                              "description": "50~9,999,999の整数",
+                              "type": "integer"
+                           },
+                           "capture": {
+                              "description": "支払い処理を確定するかどうか",
+                              "type": "boolean"
+                           },
+                           "card": {
+                              "description": "トークンIDまたはカードID",
+                              "type": "string"
+                           },
+                           "currency": {
+                              "description": "3文字のISOコード(現状 \"jpy\" のみサポート)",
+                              "example": "jpy",
+                              "type": "string"
+                           },
+                           "customer": {
+                              "description": "顧客ID",
+                              "type": "string"
+                           },
+                           "description": {
+                              "description": "概要",
+                              "type": "string"
+                           },
+                           "expiry_days": {
+                              "description": "認証状態が失効するまでの日数",
+                              "type": "integer"
+                           },
+                           "metadata": {
+                              "additionalProperties": {
+                                 "type": "string"
+                              },
+                              "description": "キーバリューの任意データ",
+                              "type": "object"
+                           },
+                           "platform_fee": {
+                              "description": "[PAY.JP Platform](#platform-api) のみ設定可能\n\nプラットフォーマーに振り分けられる入金金額。",
+                              "type": "integer"
+                           },
+                           "product": {
+                              "description": "プロダクトID",
+                              "type": "string"
+                           },
+                           "tenant": {
+                              "description": "[PAY.JP Platform](#platform-api) のみ設定可能\n\nテナントID",
+                              "type": "string"
+                           },
+                           "three_d_secure": {
+                              "description": "3Dセキュアを行うならtrue",
+                              "type": "boolean"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "作成されたchargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "支払いを作成"
+         }
+      },
+      "/charges/{charge}": {
+         "get": {
+            "description": "生成された支払い情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "指定したidのchargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "支払い情報を取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/charge"
+            }
+         ],
+         "post": {
+            "description": "支払い情報を更新します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "description": {
+                              "description": "概要",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "additionalProperties": {
+                                 "type": "string"
+                              },
+                              "description": "キーバリューの任意データ",
+                              "type": "object"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "更新されたchargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "支払い情報を更新"
+         }
+      },
+      "/charges/{charge}/capture": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/charge"
+            }
+         ],
+         "post": {
+            "description": "認証状態となった処理待ちの支払い処理を確定させます。具体的には `captured=\"false\"` となった支払いが該当します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "amount": {
+                              "description": "50~9,999,999の整数\n\nこれをセットすることで、支払い生成時の金額と異なる金額の支払い処理を行うことができます。\nただし支払い生成時の金額よりも少額である必要があるためご注意ください。\n\nセットした場合、レスポンスの `amount_refunded` に認証時の `amount` との差額が入ります。\n例えば、認証時に `amount=500` で作成し、 `amount=400` で支払い確定を行った場合、 `amount_refunded=100` となり、確定金額が400円に変更された状態で支払いが確定されます。",
+                              "type": "integer"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "支払いが確定された状態のchargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "支払い処理を確定する"
+         }
+      },
+      "/charges/{charge}/reauth": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/charge"
+            }
+         ],
+         "post": {
+            "description": "**各種SDKは順次対応予定です**\n\n認証状態となった処理待ちの支払いを再認証します。 `captured=\"false\"` の支払いが対象です。\n`expiry_days` を指定することで、新たな認証の期間を定めることができます。 `expiry_days` はデフォルトで7日となっており、1日~60日の間で設定が可能です。なお60日に設定した場合、認証期限は59日後の11:59PM(日本時間)までになります。\n\n**再認証が必要な場合は認証状態の charge を[返金し](#返金する)、新たに[支払いを作成](#支払いを作成) することを推奨いたします。**\n\nこのAPIは認証済みの与信をキャンセルせず別の与信を作るため、同じ金額で認証済みでも失敗したり、デビットカードなどでは一度目の認証(capture=falseの支払い)と含めて二重に金額が引き落とされることがあります。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "expiry_days": {
+                              "description": "認証状態が失効するまでの日数",
+                              "type": "integer"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "再認証後の状態のchargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "支払いを再認証する"
+         }
+      },
+      "/charges/{charge}/refund": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/charge"
+            }
+         ],
+         "post": {
+            "description": "支払い済みとなった処理を返金します。全額返金、及び `amount` を指定することで金額の部分返金を行うことができます。また確定していない支払いも取り消すことができますが `amount` を指定して部分返金をすることはできません。\n\nなお返金可能な期限につきましては売上作成より`180日以内`となります。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "amount": {
+                              "description": "1~9,999,999の整数",
+                              "type": "integer"
+                           },
+                           "refund_reason": {
+                              "description": "返金理由 (255文字以内)",
+                              "type": "string"
+                           }
+                        },
+                        "required": [
+                           "amount"
+                        ],
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "返金後の状態のchargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "返金する"
+         }
+      },
+      "/charges/{charge}/tds_finish": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/charge"
+            }
+         ],
+         "post": {
+            "description": "3Dセキュア認証が終了した支払いに対し、決済を行います。\n[支払いを作成](#支払いを作成) と同様の決済処理が実行され、実際の請求が行われる状態になります。カードの状態によっては支払いに失敗し、402エラーとなる点も同様です。\n保留中の支払いで固定値となっていた`capture`、`captured_at`、`expired_at`は、支払い作成時に指定した通りに反映されます。`captured_at`、`expired_at`の時刻は本APIにリクエストした時刻を基準として設定されます。\n\n`three_d_secure_status`が`verified`、`attempted`でない支払いに対して本APIをリクエストした場合、エラーとなります。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/charge"
+                        }
+                     }
+                  },
+                  "description": "chargeオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "3Dセキュアフローを完了する"
+         }
+      },
+      "/customers": {
+         "get": {
+            "description": "生成した顧客情報のリストを取得します。リストは、直近で生成された順番に取得されます。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/customer"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "Customerオブジェクトのリスト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客リストを取得"
+         },
+         "post": {
+            "description": "メールアドレスやIDなどを指定して顧客を作成します。作成と同時にカード情報を登録する場合、トークンIDを指定します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "card": {
+                              "description": "トークンID(トークンIDを指定)",
+                              "type": "string"
+                           },
+                           "description": {
+                              "description": "概要",
+                              "type": "string"
+                           },
+                           "email": {
+                              "description": "メールアドレス",
+                              "type": "string"
+                           },
+                           "id": {
+                              "description": "顧客ID",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/customer"
+                        }
+                     }
+                  },
+                  "description": "作成されたCustomerオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客を作成"
+         }
+      },
+      "/customers/{customer}": {
+         "delete": {
+            "description": "顧客を削除します。顧客に紐付く定期課金がある場合は、同時にそれらの定期課金も削除されます。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/deleteResponse"
+                        }
+                     }
+                  },
+                  "description": "削除結果"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客を削除"
+         },
+         "get": {
+            "description": "生成した顧客情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/customer"
+                        }
+                     }
+                  },
+                  "description": "Customerオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客情報を取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/customer"
+            }
+         ],
+         "post": {
+            "description": "生成した顧客情報を更新したり、新たなカードを顧客に追加することができます。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "card": {
+                              "description": "トークンID(トークンIDを指定)",
+                              "type": "string"
+                           },
+                           "default_card": {
+                              "description": "保持しているカードID",
+                              "type": "string"
+                           },
+                           "description": {
+                              "description": "概要",
+                              "type": "string"
+                           },
+                           "email": {
+                              "description": "メールアドレス",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/customer"
+                        }
+                     }
+                  },
+                  "description": "更新されたCustomerオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客情報を更新"
+         }
+      },
+      "/customers/{customer}/cards": {
+         "get": {
+            "description": "顧客の保持しているカードリストを取得します。リストは、直近で生成された順番に取得されます。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/card"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "Cardオブジェクトのリスト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客のカードリストを取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/customer"
+            }
+         ],
+         "post": {
+            "description": "トークンIDを指定して、新たにカードを追加します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "card": {
+                              "description": "トークンID",
+                              "type": "string"
+                           },
+                           "default": {
+                              "description": "メイン利用のカードに設定するかどうか",
+                              "type": "boolean"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/card"
+                        }
+                     }
+                  },
+                  "description": "作成されたCardオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客のカードを作成"
+         }
+      },
+      "/customers/{customer}/cards/{card}": {
+         "delete": {
+            "description": "顧客の特定のカードを削除します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/deleteResponse"
+                        }
+                     }
+                  },
+                  "description": "削除結果"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客のカードを削除"
+         },
+         "get": {
+            "description": "顧客の特定のカード情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/card"
+                        }
+                     }
+                  },
+                  "description": "Cardオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客のカード情報を取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/customer"
+            },
+            {
+               "description": "カードID",
+               "in": "path",
+               "name": "card",
+               "required": true,
+               "schema": {
+                  "example": "car_6845da1a8651f889bc432362dfcb",
+                  "type": "string"
+               }
+            }
+         ],
+         "post": {
+            "description": "顧客の特定のカード情報を更新します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "address_city": {
+                              "description": "市区町村",
+                              "type": "string"
+                           },
+                           "address_line1": {
+                              "description": "番地など",
+                              "type": "string"
+                           },
+                           "address_line2": {
+                              "description": "建物名など",
+                              "type": "string"
+                           },
+                           "address_state": {
+                              "description": "都道府県",
+                              "type": "string"
+                           },
+                           "address_zip": {
+                              "description": "郵便番号",
+                              "type": "string"
+                           },
+                           "country": {
+                              "description": "2桁のISOコード(e.g. JP)",
+                              "type": "string"
+                           },
+                           "email": {
+                              "description": "メールアドレス",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "name": {
+                              "description": "カード保有者名",
+                              "type": "string"
+                           },
+                           "phone": {
+                              "description": "E.164形式の電話番号",
+                              "type": "string"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/card"
+                        }
+                     }
+                  },
+                  "description": "更新されたCardオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "顧客のカードを更新"
+         }
+      },
+      "/events": {
+         "get": {
+            "description": "イベントリストを取得します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "取得するeventに紐づくAPIリソースのID (e.g. customer.id)",
+                  "in": "query",
+                  "name": "resource_id",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "取得するeventに紐づくAPIリソースのobject。値はリソース名(e.g. customer, charge)",
+                  "in": "query",
+                  "name": "object",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "取得するeventのtype",
+                  "in": "query",
+                  "name": "type",
+                  "schema": {
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/event"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "eventオブジェクトのlistオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "イベントリストを取得"
+         }
+      },
+      "/events/{event}": {
+         "get": {
+            "description": "特定のイベント情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/event"
+                        }
+                     }
+                  },
+                  "description": "指定したidのeventオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "イベント情報を取得"
+         },
+         "parameters": [
+            {
+               "description": "evnt_で始まる一意なオブジェクトを示す文字列",
+               "in": "path",
+               "name": "event",
+               "required": true,
+               "schema": {
+                  "example": "evnt_54db4d63c7886256acdbc784ccf",
+                  "type": "string"
+               }
+            }
+         ]
+      },
+      "/plans": {
+         "get": {
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/plan"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "Planオブジェクトのリスト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            }
+         },
+         "post": {
+            "description": "金額や通貨などを指定して定期購入に利用するプランを生成します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "amount": {
+                              "description": "50~9,999,999の整数",
+                              "maximum": 9999999,
+                              "minimum": 50,
+                              "type": "integer"
+                           },
+                           "billing_day": {
+                              "description": "月次プラン(`interval=month`)のみに指定可能な課金日(1〜31)",
+                              "maximum": 31,
+                              "minimum": 1,
+                              "type": "integer"
+                           },
+                           "currency": {
+                              "description": "3文字のISOコード(現状 \"jpy\" のみサポート)",
+                              "example": "jpy",
+                              "type": "string"
+                           },
+                           "id": {
+                              "description": "任意のプランID。一意に識別できる必要があり、重複する値を設定するとエラーとなります。",
+                              "type": "string"
+                           },
+                           "interval": {
+                              "description": "課金周期(\"month\"もしくは\"year\")",
+                              "enum": [
+                                 "month",
+                                 "year"
+                              ],
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "name": {
+                              "description": "プランの名前",
+                              "type": "string"
+                           },
+                           "trial_days": {
+                              "description": "トライアル日数",
+                              "maximum": 365,
+                              "minimum": 0,
+                              "type": "integer"
+                           }
+                        },
+                        "required": [
+                           "amount",
+                           "currency",
+                           "interval"
+                        ],
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/plan"
+                        }
+                     }
+                  },
+                  "description": "作成されたPlanオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "プランを作成"
+         }
+      },
+      "/plans/{plan}": {
+         "delete": {
+            "description": "プランを削除します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/deleteResponse"
+                        }
+                     }
+                  },
+                  "description": "削除結果"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "プランを削除"
+         },
+         "get": {
+            "description": "特定のプラン情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/plan"
+                        }
+                     }
+                  },
+                  "description": "指定したidのPlanオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "プラン情報を取得"
+         },
+         "parameters": [
+            {
+               "description": "プランID。一意なplanオブジェクトを識別する文字列。",
+               "in": "path",
+               "name": "plan",
+               "required": true,
+               "schema": {
+                  "example": "pln_45dd3268a18b2837d52861716260",
+                  "type": "string"
+               }
+            }
+         ],
+         "post": {
+            "description": "プラン情報を更新します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "name": {
+                              "description": "プランの名前",
+                              "type": "string"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/plan"
+                        }
+                     }
+                  },
+                  "description": "更新されたPlanオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "プランを更新"
+         }
+      },
+      "/statements": {
+         "get": {
+            "description": "取引明細リストを取得します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "取引明細の発行対象で絞り込みます。以下の値が指定できます。\n\n| owner | 絞り込み対象 |\n| ----- | ------------ |\n| merchant | 加盟店に向けて発行されたもの |\n| tenant | テナントに向けて発行されたもの |",
+                  "in": "query",
+                  "name": "owner",
+                  "schema": {
+                     "enum": [
+                        "merchant",
+                        "tenant"
+                     ],
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "取引明細の生成元オブジェクトで絞り込みます。\n\ntransferオブジェクトもしくは tenant_transferオブジェクトのIDを指定します。",
+                  "in": "query",
+                  "name": "source_transfer",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "テナントのIDで絞り込みます。",
+                  "in": "query",
+                  "name": "tenant",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "集計区間のIDで絞り込みます。",
+                  "in": "query",
+                  "name": "term",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "typeの値で絞り込みます。",
+                  "in": "query",
+                  "name": "type",
+                  "schema": {
+                     "enum": [
+                        "sales",
+                        "service_fee",
+                        "forfeit",
+                        "transfer_fee",
+                        "misc"
+                     ],
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/statement"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "statementオブジェクトのlistオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "取引明細リストを取得"
+         }
+      },
+      "/statements/{statement}": {
+         "get": {
+            "description": "取引明細を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/statement"
+                        }
+                     }
+                  },
+                  "description": "指定したidのstatementオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "取引明細を取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/statement"
+            }
+         ]
+      },
+      "/statements/{statement}/statement_urls": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/statement"
+            }
+         ],
+         "post": {
+            "description": "取引明細およびインボイスをダウンロードできる一時URLを発行します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "platformer": {
+                              "default": false,
+                              "description": "`true`を指定するとプラットフォーム手数料に関する明細がダウンロードできるURLを発行します。",
+                              "type": "boolean"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/statement_url"
+                        }
+                     }
+                  },
+                  "description": "Statement URL オブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "取引明細ダウンロードURLを発行"
+         }
+      },
+      "/subscriptions": {
+         "get": {
+            "description": "生成した定期課金のリストを取得します。\n\nリストは、直近で生成された順番に取得されます。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "絞り込みたいプランID",
+                  "in": "query",
+                  "name": "plan",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "絞り込みたい顧客ID",
+                  "in": "query",
+                  "name": "customer",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "定期課金ステータス。`active`, `trial`, `canceled` または `paused` のみ指定可能。",
+                  "in": "query",
+                  "name": "status",
+                  "schema": {
+                     "enum": [
+                        "active",
+                        "trial",
+                        "canceled",
+                        "paused"
+                     ],
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/subscription"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "subscriptionオブジェクトのlistオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金のリストを取得"
+         },
+         "post": {
+            "description": "顧客IDとプランIDを指定して、定期課金を開始します。\n\n前払い式のため、定期課金作成時に最初の課金が実行されます。但し以下の場合には作成時の課金はされません。\n\n- トライアル状態(`status=trial`)で作成された場合\n- プランの課金日(`billing_day`)が指定され、定期課金の日割り設定(`prorate`)が設定されていない場合",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "customer": {
+                              "description": "顧客ID",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "plan": {
+                              "description": "プランID",
+                              "type": "string"
+                           },
+                           "prorate": {
+                              "description": "`true`の場合、日割り課金を設定します",
+                              "type": "boolean"
+                           },
+                           "trial_end": {
+                              "description": "リクエスト時より未来のタイムスタンプ(5年後まで) or 文字列 `now` が指定可能です。",
+                              "oneOf": [
+                                 {
+                                    "type": "integer"
+                                 },
+                                 {
+                                    "type": "string"
+                                 }
+                              ]
+                           }
+                        },
+                        "required": [
+                           "customer",
+                           "plan"
+                        ],
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/subscription"
+                        }
+                     }
+                  },
+                  "description": "作成されたsubscriptionオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金を作成"
+         }
+      },
+      "/subscriptions/{subscription}": {
+         "delete": {
+            "description": "定期課金をすぐに削除します。\n次回以降の課金は行われず、一度削除した定期課金は再び戻すことができません。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "prorate": {
+                              "description": "`true`の場合、削除時から現在の周期の終了日までの日割り分を算出し、返金処理を行います。",
+                              "type": "boolean"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/deleteResponse"
+                        }
+                     }
+                  },
+                  "description": "削除結果"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金を削除"
+         },
+         "get": {
+            "description": "指定されたIDの定期課金情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/subscription"
+                        }
+                     }
+                  },
+                  "description": "指定されたidのsubscriptionオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金情報を取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/subscription"
+            }
+         ],
+         "post": {
+            "description": "トライアル期間を新たに設定したり、プランの変更を行うことができます。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "next_cycle_plan": {
+                              "description": "次回サイクル更新時に指定のプランへと自動的に切り替えを行い課金を試みます。",
+                              "type": "string"
+                           },
+                           "plan": {
+                              "description": "新しいプランのID",
+                              "type": "string"
+                           },
+                           "prorate": {
+                              "description": "`true`の場合、日割り課金を設定します",
+                              "type": "boolean"
+                           },
+                           "trial_end": {
+                              "description": "リクエスト時より未来のタイムスタンプ(5年後まで) or 文字列 `now` が指定可能です。",
+                              "oneOf": [
+                                 {
+                                    "type": "integer"
+                                 },
+                                 {
+                                    "type": "string"
+                                 }
+                              ]
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/subscription"
+                        }
+                     }
+                  },
+                  "description": "更新されたsubscriptionオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金を更新"
+         }
+      },
+      "/subscriptions/{subscription}/cancel": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/subscription"
+            }
+         ],
+         "post": {
+            "description": "定期課金をキャンセルし、現在の周期の終了日をもって定期課金を終了させます。\n\n終了日以前であれば、定期課金の再開リクエスト(/resume)を行うことで、キャンセルを取り消すことができます。\n終了日をむかえた定期課金は自動的に削除されますのでご注意ください。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/subscription"
+                        }
+                     }
+                  },
+                  "description": "キャンセルされたsubscriptionオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金をキャンセル"
+         }
+      },
+      "/subscriptions/{subscription}/pause": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/subscription"
+            }
+         ],
+         "post": {
+            "description": "引き落としの失敗やカードが不正である、また定期課金を停止したい場合はこのリクエストで定期購入を停止させます。\n\n定期課金を停止させると、再開されるまで引き落とし処理は一切行われません。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/subscription"
+                        }
+                     }
+                  },
+                  "description": "停止されたsubscriptionオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金を停止"
+         }
+      },
+      "/subscriptions/{subscription}/resume": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/subscription"
+            }
+         ],
+         "post": {
+            "description": "停止もしくはキャンセル状態(`status=canceled or paused`)の定期課金を再開させます。\n\nトライアル期間中であればトライアル状態(`status=trial`)で再開します。\n\n再開時の `current_period_end` が過去の日時の場合、トライアル期間内でなければ支払いが行われ、その時点が周期の開始として設定されます。\n支払いの失敗により停止していた場合などは、 `current_period_end` は支払い失敗時の値になるため、必ず過去の日時がセットされます。\n\n再開時の支払いに失敗すると、定期課金は再開されません。\nこの場合は、有効なカードを顧客のデフォルトカードにセットしてから、再度定期課金の再開を行ってください。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "prorate": {
+                              "description": "`true`の場合、日割り課金を設定します",
+                              "type": "boolean"
+                           },
+                           "trial_end": {
+                              "description": "リクエスト時より未来のタイムスタンプ(5年後まで) or 文字列 `now` が指定可能です。",
+                              "oneOf": [
+                                 {
+                                    "type": "integer"
+                                 },
+                                 {
+                                    "type": "string"
+                                 }
+                              ]
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/subscription"
+                        }
+                     }
+                  },
+                  "description": "再開されたsubscriptionオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "定期課金を再開"
+         }
+      },
+      "/tenants": {
+         "get": {
+            "description": "テナントのリストを取得します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/tenant"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "tenantオブジェクトのlistオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "テナントリストを取得"
+         },
+         "post": {
+            "description": "名前やIDなどを指定してテナントを作成します。\n\n作成したテナントはあとから更新・削除することができます。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "bank_account_holder_name": {
+                              "description": "口座名義（Payouts型アカウントの場合は必須）",
+                              "type": "string"
+                           },
+                           "bank_account_number": {
+                              "description": "口座番号（Payouts型アカウントの場合は必須）",
+                              "type": "string"
+                           },
+                           "bank_account_type": {
+                              "description": "預金種別（Payouts型アカウントの場合は必須）",
+                              "type": "string"
+                           },
+                           "bank_branch_code": {
+                              "description": "3桁の支店コード（Payouts型アカウントの場合は必須）",
+                              "type": "string"
+                           },
+                           "bank_code": {
+                              "description": "4桁の銀行コード（Payouts型アカウントの場合は必須）",
+                              "type": "string"
+                           },
+                           "id": {
+                              "description": "テナントIDとなる任意の文字列。一意にならないとエラーになります。また、未指定時は自動生成されます。",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "minimum_transfer_amount": {
+                              "description": "最低入金額。デフォルトは1万円で下限は1000円。",
+                              "type": "integer"
+                           },
+                           "name": {
+                              "description": "テナント名",
+                              "type": "string"
+                           },
+                           "payjp_fee_included": {
+                              "description": "テナントのプラットフォーム利用料にPAY.JP決済手数料を含めるかどうか。デフォルトはfalse。作成時にのみ指定可能で、あとから変更はできません。",
+                              "type": "boolean"
+                           },
+                           "platform_fee_rate": {
+                              "description": "テナントのプラットフォーム利用料率(%)。小数点以下2桁まで入力可能。作成時に必須です。",
+                              "example": 10.15,
+                              "format": "float",
+                              "type": "number"
+                           }
+                        },
+                        "required": [
+                           "name",
+                           "platform_fee_rate"
+                        ],
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/tenant"
+                        }
+                     }
+                  },
+                  "description": "作成されたtenantオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "テナントを作成"
+         }
+      },
+      "/tenants/{tenant}": {
+         "delete": {
+            "description": "生成したテナント情報を削除します。\n\n削除したテナントと同じIDのテナントをもう一度生成することができますが、削除したテナントとは別のテナントとして扱われます。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/deleteResponse"
+                        }
+                     }
+                  },
+                  "description": "削除結果"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "テナントを削除"
+         },
+         "get": {
+            "description": "テナント情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/tenant"
+                        }
+                     }
+                  },
+                  "description": "指定したIDのtenantオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "テナント情報を取得"
+         },
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/tenant"
+            }
+         ],
+         "post": {
+            "description": "生成したテナント情報を更新することができます。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "bank_account_holder_name": {
+                              "description": "口座名義",
+                              "type": "string"
+                           },
+                           "bank_account_number": {
+                              "description": "口座番号",
+                              "type": "string"
+                           },
+                           "bank_account_type": {
+                              "description": "預金種別",
+                              "type": "string"
+                           },
+                           "bank_branch_code": {
+                              "description": "3桁の支店コード",
+                              "type": "string"
+                           },
+                           "bank_code": {
+                              "description": "4桁の銀行コード",
+                              "type": "string"
+                           },
+                           "metadata": {
+                              "$ref": "#/components/schemas/metadata"
+                           },
+                           "minimum_transfer_amount": {
+                              "description": "最低入金額。デフォルトは1万円で下限は1000円。",
+                              "type": "integer"
+                           },
+                           "name": {
+                              "description": "テナント名",
+                              "type": "string"
+                           },
+                           "platform_fee_rate": {
+                              "description": "テナントのプラットフォーム利用料率(%)。小数点以下2桁まで入力可能。最大95%",
+                              "format": "float",
+                              "type": "number"
+                           }
+                        },
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/tenant"
+                        }
+                     }
+                  },
+                  "description": "更新されたtenantオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "テナント情報を更新"
+         }
+      },
+      "/tenants/{tenant}/application_urls": {
+         "parameters": [
+            {
+               "$ref": "#/components/parameters/tenant"
+            }
+         ],
+         "post": {
+            "description": "(Marketplace型アカウントのみ利用可能)テナントの審査申請ページのURLを作成します。\n\nテストモードの場合、実際の審査は行われず情報が保存されない為、常に新規申請になります。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "description": "application_urlオブジェクト",
+                           "properties": {
+                              "expires": {
+                                 "description": "application_urlの使用期限のタイムスタンプ。発行から5分",
+                                 "format": "int64",
+                                 "type": "integer"
+                              },
+                              "object": {
+                                 "description": "固定文字列",
+                                 "enum": [
+                                    "application_url"
+                                 ],
+                                 "type": "string"
+                              },
+                              "url": {
+                                 "description": "テナントの審査申請URL",
+                                 "type": "string"
+                              }
+                           },
+                           "required": [
+                              "object",
+                              "url",
+                              "expires"
+                           ],
+                           "type": "object"
+                        }
+                     }
+                  },
+                  "description": "application_urlオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "テナントの審査申請ページのURLを作成"
+         }
+      },
+      "/terms": {
+         "get": {
+            "description": "集計区間（Termオブジェクト）のリストを取得します。",
+            "operationId": "GetTerms",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "start_atが指定したタイムスタンプ以降のオブジェクトを取得",
+                  "in": "query",
+                  "name": "since_start_at",
+                  "required": false,
+                  "schema": {
+                     "format": "int64",
+                     "type": "integer"
+                  }
+               },
+               {
+                  "description": "start_atが指定したタイムスタンプ以前のオブジェクトを取得",
+                  "in": "query",
+                  "name": "until_start_at",
+                  "required": false,
+                  "schema": {
+                     "format": "int64",
+                     "type": "integer"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "Termオブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/term"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "Termオブジェクトのリスト"
+               },
+               "default": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "集計区間のリストを取得"
+         }
+      },
+      "/terms/{term}": {
+         "get": {
+            "description": "指定されたIDの集計区間（Termオブジェクト）を取得します。",
+            "operationId": "GetTerm",
+            "parameters": [
+               {
+                  "description": "TermオブジェクトのID（tm_で始まる一意な文字列）",
+                  "in": "path",
+                  "name": "term",
+                  "required": true,
+                  "schema": {
+                     "type": "string"
+                  },
+                  "style": "simple"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/term"
+                        }
+                     }
+                  },
+                  "description": "Termオブジェクトの詳細情報"
+               },
+               "default": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "集計区間オブジェクトを取得"
+         }
+      },
+      "/three_d_secure_requests": {
+         "get": {
+            "description": "3Dセキュアリクエスト情報のリストを取得します。",
+            "parameters": [
+               {
+                  "$ref": "#/components/parameters/limit"
+               },
+               {
+                  "$ref": "#/components/parameters/offset"
+               },
+               {
+                  "$ref": "#/components/parameters/since"
+               },
+               {
+                  "$ref": "#/components/parameters/until"
+               },
+               {
+                  "description": "3Dセキュア処理対象リソースのID",
+                  "in": "query",
+                  "name": "resource_id",
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "テナントID",
+                  "in": "query",
+                  "name": "tenant_id",
+                  "schema": {
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "allOf": [
+                              {
+                                 "$ref": "#/components/schemas/list"
+                              },
+                              {
+                                 "properties": {
+                                    "data": {
+                                       "description": "オブジェクトの配列",
+                                       "items": {
+                                          "$ref": "#/components/schemas/three_d_secure_request"
+                                       },
+                                       "type": "array"
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  "description": "three_d_secure_requestオブジェクトのlist"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "3Dセキュアリクエストリストを取得"
+         },
+         "post": {
+            "description": "顧客カードIDを指定して3Dセキュアリクエストを作成します。",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "resource_id": {
+                              "description": "顧客カードID",
+                              "example": "car_xxxxxx",
+                              "type": "string"
+                           },
+                           "tenant_id": {
+                              "description": "テナントID。PAY.JP Platform のみ設定可能",
+                              "type": "string"
+                           }
+                        },
+                        "required": [
+                           "resource_id"
+                        ],
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/three_d_secure_request"
+                        }
+                     }
+                  },
+                  "description": "作成されたthree_d_secure_requestオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "3Dセキュアを作成"
+         }
+      },
+      "/three_d_secure_requests/{three_d_secure_request}": {
+         "get": {
+            "description": "3Dセキュアリクエスト情報を取得します。",
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/three_d_secure_request"
+                        }
+                     }
+                  },
+                  "description": "指定したidのthree_d_secure_requestオブジェクト"
+               },
+               "4XX": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "エラーレスポンス"
+               }
+            },
+            "summary": "3Dセキュアリクエスト情報を取得"
+         },
+         "parameters": [
+            {
+               "description": "tdsr_で始まる一意なオブジェクトを示す文字列",
+               "in": "path",
+               "name": "three_d_secure_request",
+               "required": true,
+               "schema": {
+                  "example": "tdsr_ed15fa4e2a6300d5971b1b69b827",
+                  "type": "string"
+               }
+            }
+         ]
+      },
+      "/tokens": {
+         "post": {
+            "description": "Create new token",
+            "requestBody": {
+               "content": {
+                  "application/x-www-form-urlencoded": {
+                     "schema": {
+                        "properties": {
+                           "card[address_city]": {
+                              "type": "string"
+                           },
+                           "card[address_line1]": {
+                              "type": "string"
+                           },
+                           "card[address_line2]": {
+                              "type": "string"
+                           },
+                           "card[address_state]": {
+                              "type": "string"
+                           },
+                           "card[address_zip]": {
+                              "type": "string"
+                           },
+                           "card[country]": {
+                              "type": "string"
+                           },
+                           "card[cvc]": {
+                              "type": "string"
+                           },
+                           "card[email]": {
+                              "description": "メールアドレス\n2024年8月以降、3Dセキュア認証の際にphoneまたはemailのデータ入力が求められます。\n",
+                              "type": "string"
+                           },
+                           "card[exp_month]": {
+                              "type": "string"
+                           },
+                           "card[exp_year]": {
+                              "type": "string"
+                           },
+                           "card[name]": {
+                              "description": "カード保有者名(e.g. \"PAY TARO\")\n\n45文字以下の半角英数字、スペース ピリオド ハイフンのみに形式の変更を予定しております。",
+                              "type": "string"
+                           },
+                           "card[number]": {
+                              "type": "string"
+                           },
+                           "card[phone]": {
+                              "description": "E.164形式の電話番号 (e.g. 090-0123-4567（日本） => \"+819001234567\")\n2024年8月以降、3Dセキュア認証の際にphoneまたはemailのデータ入力が求められます。\n",
+                              "type": "string"
+                           },
+                           "tenant": {
+                              "description": "テナントID",
+                              "type": "string"
+                           },
+                           "three_d_secure": {
+                              "description": "3Dセキュアを開始するかどうか\n管理画面でトークン3Dセキュアを実施するモードが有効になっている時は無視されます。",
+                              "type": "boolean"
+                           }
+                        },
+                        "required": [
+                           "card[number]",
+                           "card[exp_month]",
+                           "card[exp_year]",
+                           "card[cvc]",
+                           "card[name]"
+                        ],
+                        "type": "object"
+                     }
+                  }
+               },
+               "required": true
+            },
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/token"
+                        }
+                     }
+                  },
+                  "description": "The token you created"
+               },
+               "default": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "Error response."
+               }
+            }
+         }
+      },
+      "/tokens/{token}": {
+         "get": {
+            "description": "Info for a specific token",
+            "parameters": [
+               {
+                  "description": "The id of the token to retrieve",
+                  "in": "path",
+                  "name": "token",
+                  "required": true,
+                  "schema": {
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/token"
+                        }
+                     }
+                  },
+                  "description": "Expected response to a valid request"
+               },
+               "default": {
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "$ref": "#/components/schemas/error"
+                        }
+                     }
+                  },
+                  "description": "Error response."
+               }
+            }
+         }
+      },
+      "/v1/tds/{resource_id}/start": {
+         "get": {
+            "description": "3Dセキュア認証画面をエンドユーザーに表示します。\nこのエンドポイントはJSONではなくエンドユーザーが直接アクセスしウェブページを表示するもので、SDK、または加盟店サーバーからのアクセスは想定されていません。\n詳しいご利用方法は下記チュートリアルをご参照ください。\n\n[支払いで3Dセキュアを実施する](/docs/charge-tds)",
+            "parameters": [
+               {
+                  "description": "3Dセキュア対象のオブジェクトのID",
+                  "in": "path",
+                  "name": "resource_id",
+                  "required": true,
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "加盟店の公開API鍵。ここで指定した鍵によってlivemode/testmodeが決定されます。他のパラメータについてもpublickeyで指定された鍵のモードに合わせる必要があります。(backで指定する識別子のモード、back_urlの署名秘密鍵のモード等)",
+                  "in": "query",
+                  "name": "publickey",
+                  "required": true,
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "3Dセキュア処理後の戻り先とするリダイレクトURLの識別子。リダイレクトURLは事前に管理画面から登録します。",
+                  "in": "query",
+                  "name": "back",
+                  "required": false,
+                  "schema": {
+                     "type": "string"
+                  }
+               },
+               {
+                  "description": "戻り先URLを含むJWS形式のデータ。backとback_urlが同時指定された場合、back_urlが優先されbackは無視されます。",
+                  "in": "query",
+                  "name": "back_url",
+                  "required": false,
+                  "schema": {
+                     "type": "string"
+                  }
+               }
+            ],
+            "responses": {
+               "200": {
+                  "content": {
+                     "text/html": {
+                        "schema": {
+                           "description": "HTML content",
+                           "type": "string"
+                        }
+                     }
+                  },
+                  "description": "3Dセキュア認証画面もしくはエラーページ"
+               },
+               "4XX": {
+                  "content": {
+                     "text/html": {
+                        "schema": {
+                           "description": "HTML content representing the error page",
+                           "type": "string"
+                        }
+                     }
+                  },
+                  "description": "エラーページ"
+               }
+            },
+            "summary": "3Dセキュア開始"
+         }
+      }
+   },
+   "servers": [
+      {
+         "url": "https://api.pay.jp/v1"
+      }
+   ]
+}

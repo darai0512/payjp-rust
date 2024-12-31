@@ -1,0 +1,12 @@
+[[crates]]
+name = "core"
+paths = ["term", "balance", "charge", "plan", "token", "account", "tenant",
+    "subscription", "three_d_secure_request", "event", "customer", "card"]
+packages = ["apps"]
+description = "core"
+
+[[crates]]
+name = "shared"
+paths = ["error", "metadata", "deleteResponse", "statement_url"]
+description = '''
+'''

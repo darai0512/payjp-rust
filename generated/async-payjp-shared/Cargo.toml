@@ -1,0 +1,31 @@
+[package]
+name = "async-payjp-shared"
+version.workspace = true
+description.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+path = "src/mod.rs"
+name = "payjp_shared"
+
+[dependencies]
+serde.workspace = true
+serde_json = { workspace = true, optional = true }
+smol_str.workspace = true
+miniserde.workspace = true
+async-payjp-types = {path = "../../async-payjp-types"}
+
+
+
+
+[features]
+serialize = ["async-payjp-types/serialize"]
+deserialize = ["async-payjp-types/deserialize", "dep:serde_json"]
+

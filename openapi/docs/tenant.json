@@ -1,0 +1,432 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PAY.JP API",
+    "version": "1.0.0",
+    "description": "PAY.JP Tenant API specification in OpenAPI 3.0"
+  },
+  "paths": {
+    "/tenants": {
+      "post": {
+        "summary": "テナントを作成",
+        "description": "名前やIDなどを指定してテナントを作成します。\n\n作成したテナントはあとから更新・削除することができます。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "テナント名"
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": "テナントIDとなる任意の文字列。一意にならないとエラーになります。また、未指定時は自動生成されます。"
+                  },
+                  "platform_fee_rate": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "テナントのプラットフォーム利用料率(%)。小数点以下2桁まで入力可能。作成時に必須です。",
+                    "example": 10.15
+                  },
+                  "payjp_fee_included": {
+                    "type": "boolean",
+                    "description": "テナントのプラットフォーム利用料にPAY.JP決済手数料を含めるかどうか。デフォルトはfalse。作成時にのみ指定可能で、あとから変更はできません。"
+                  },
+                  "minimum_transfer_amount": {
+                    "type": "integer",
+                    "description": "最低入金額。デフォルトは1万円で下限は1000円。"
+                  },
+                  "bank_code": {
+                    "type": "string",
+                    "description": "4桁の銀行コード（Payouts型アカウントの場合は必須）"
+                  },
+                  "bank_branch_code": {
+                    "type": "string",
+                    "description": "3桁の支店コード（Payouts型アカウントの場合は必須）"
+                  },
+                  "bank_account_type": {
+                    "type": "string",
+                    "description": "預金種別（Payouts型アカウントの場合は必須）"
+                  },
+                  "bank_account_number": {
+                    "type": "string",
+                    "description": "口座番号（Payouts型アカウントの場合は必須）"
+                  },
+                  "bank_account_holder_name": {
+                    "type": "string",
+                    "description": "口座名義（Payouts型アカウントの場合は必須）"
+                  },
+                  "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+                },
+                "required": ["name", "platform_fee_rate"]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "作成されたtenantオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tenant"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "テナントリストを取得",
+        "description": "テナントのリストを取得します。",
+        "parameters": [
+          {"$ref": "./base.json#/components/parameters/limit"},
+          {"$ref": "./base.json#/components/parameters/offset"},
+          {"$ref": "./base.json#/components/parameters/since"},
+          {"$ref": "./base.json#/components/parameters/until"}
+        ],
+        "responses": {
+          "200": {
+            "description": "tenantオブジェクトのlistオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "./base.json#/components/schemas/list"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "description": "オブジェクトの配列",
+                          "items": {"$ref": "#/components/schemas/tenant"}
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenants/{tenant}": {
+      "parameters": [
+        {"$ref": "#/components/parameters/tenant"}
+      ],
+      "get": {
+        "summary": "テナント情報を取得",
+        "description": "テナント情報を取得します。",
+        "responses": {
+          "200": {
+            "description": "指定したIDのtenantオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tenant"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "テナント情報を更新",
+        "description": "生成したテナント情報を更新することができます。",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "テナント名"
+                  },
+                  "platform_fee_rate": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "テナントのプラットフォーム利用料率(%)。小数点以下2桁まで入力可能。最大95%"
+                  },
+                  "minimum_transfer_amount": {
+                    "type": "integer",
+                    "description": "最低入金額。デフォルトは1万円で下限は1000円。"
+                  },
+                  "bank_code": {
+                    "type": "string",
+                    "description": "4桁の銀行コード"
+                  },
+                  "bank_branch_code": {
+                    "type": "string",
+                    "description": "3桁の支店コード"
+                  },
+                  "bank_account_type": {
+                    "type": "string",
+                    "description": "預金種別"
+                  },
+                  "bank_account_number": {
+                    "type": "string",
+                    "description": "口座番号"
+                  },
+                  "bank_account_holder_name": {
+                    "type": "string",
+                    "description": "口座名義"
+                  },
+                  "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "更新されたtenantオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/tenant"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "テナントを削除",
+        "description": "生成したテナント情報を削除します。\n\n削除したテナントと同じIDのテナントをもう一度生成することができますが、削除したテナントとは別のテナントとして扱われます。",
+        "responses": {
+          "200": {
+            "description": "削除結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/deleteResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenants/{tenant}/application_urls": {
+      "parameters": [
+        {"$ref": "#/components/parameters/tenant"}
+      ],
+      "post": {
+        "summary": "テナントの審査申請ページのURLを作成",
+        "description": "(Marketplace型アカウントのみ利用可能)テナントの審査申請ページのURLを作成します。\n\nテストモードの場合、実際の審査は行われず情報が保存されない為、常に新規申請になります。",
+        "responses": {
+          "200": {
+            "description": "application_urlオブジェクト",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "application_urlオブジェクト",
+                  "properties": {
+                    "object": {
+                      "type": "string",
+                      "description": "固定文字列",
+                      "enum": ["application_url"]
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "テナントの審査申請URL"
+                    },
+                    "expires": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "application_urlの使用期限のタイムスタンプ。発行から5分"
+                    }
+                  },
+                  "required": ["object", "url", "expires"]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "エラーレスポンス",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "./base.json#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "tenant": {
+        "name": "tenant",
+        "in": "path",
+        "description": "テナントID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "test_tenant"
+        }
+      }
+    },
+    "schemas": {
+      "tenant": {
+        "type": "object",
+        "description": "tenantオブジェクト",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "`ten_`で始まる自動生成された一意な文字列、または作成時に指定した任意の文字列",
+            "example": "test"
+          },
+          "object": {
+            "type": "string",
+            "description": "\"tenant\"の固定文字列",
+            "example": "tenant"
+          },
+          "livemode": {
+            "type": "boolean",
+            "description": "本番環境かどうか"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64",
+            "description": "定期課金作成時のUTCタイムスタンプ"
+          },
+          "platform_fee_rate": {
+            "type": "string",
+            "description": "テナントのプラットフォーム利用料率(%)",
+            "example": "10.15"
+          },
+          "payjp_fee_included": {
+            "type": "boolean",
+            "description": "テナントのプラットフォーム利用料にPAY.JP決済手数料を含めるかどうか"
+          },
+          "minimum_transfer_amount": {
+            "type": "integer",
+            "description": "最低入金額"
+          },
+          "bank_code": {
+            "type": "string", "nullable": true,
+            "description": "4桁の銀行コード"
+          },
+          "bank_branch_code": {
+            "type": "string", "nullable": true,
+            "description": "3桁の支店コード"
+          },
+          "bank_account_type": {
+            "type": "string", "nullable": true,
+            "description": "預金種別"
+          },
+          "bank_account_number": {
+            "type": "string", "nullable": true,
+            "description": "口座番号"
+          },
+          "bank_account_holder_name": {
+            "type": "string", "nullable": true,
+            "description": "口座名義"
+          },
+          "bank_account_status": {
+            "type": "string", "nullable": true,
+            "description": "口座状態。pending:未確認, success:入金確認済み, failed:入金不可能",
+            "enum": ["pending", "success", "failed"]
+          },
+          "currencies_supported": {
+            "type": "array",
+            "description": "対応通貨のリスト(文字列)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default_currency": {
+            "type": "string",
+            "description": "3文字のISOコード(現状 “jpy” のみサポート)",
+            "example": "jpy"
+          },
+          "reviewed_brands": {
+            "type": "array",
+            "description": "申請情報を提出済のブランドの各種情報",
+            "items": {
+              "type": "object",
+              "properties": {
+                "brand": {
+                  "type": "string",
+                  "description": "ブランド名"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "審査ステータス",
+                  "enum": ["passed", "in_review", "declined"]
+                },
+                "available_date": {
+                  "type": "integer", "nullable": true,
+                  "format": "int64",
+                  "description": "利用可能開始時刻のタイムスタンプ"
+                }
+              },
+              "required": ["brand", "status"]
+            }
+          },
+          "metadata": {"$ref": "./base.json#/components/schemas/metadata"}
+        },
+        "required": ["id", "object", "livemode", "created", "platform_fee_rate", "payjp_fee_included", "minimum_transfer_amount"]
+      }
+    }
+  }
+}

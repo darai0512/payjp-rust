@@ -1,0 +1,55 @@
+name: payjp-rust
+services:
+  jsonnet:
+    image: bitnami/jsonnet
+    volumes:
+      - .:/tmp/
+    entrypoint: /bin/sh -c 'jsonnet /tmp/root.jsonnet -o /tmp/openapi.json && echo "Generated openapi.json" && tail -f /dev/null'
+    healthcheck:
+      test: [ "CMD", "ls", "/tmp/openapi.json" ]
+      interval: 15s
+      timeout: 90s
+      retries: 6
+
+  swagger-editor:
+    image: swaggerapi/swagger-editor:next-v5-unprivileged
+    ports:
+      - "8001:8080"
+
+  # http://localhost:8002
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    depends_on:
+      jsonnet:
+        condition: service_healthy
+    ports:
+      - "8002:8080"
+    volumes:
+      - .:/tmp/
+    environment:
+      SWAGGER_JSON: /tmp/openapi.json
+
+  # image: stoplight/prism はarm64非対応
+  prism:
+    image: node:current-alpine
+    depends_on:
+      jsonnet:
+        condition: service_healthy
+    ports:
+      - "8003:4010"
+    volumes:
+      - .:/tmp/
+    # basepath非対応: https://github.com/stoplightio/prism/discussions/906
+    command: /bin/sh -c 'npm install -g @stoplight/prism-cli && prism mock -p 4010 -h 0.0.0.0 /tmp/openapi.json'
+
+
+  # jsonnetから生成したopenapi.jsonのvalidation目的
+  gen:
+    image: openapitools/openapi-generator-cli
+    depends_on:
+      jsonnet:
+        condition: service_healthy
+    command: generate -g openapi -i /tmp/openapi.json -o /tmp/test
+    volumes:
+      - .:/tmp/
+    # `-g rust` はopenapi v2のみ対応

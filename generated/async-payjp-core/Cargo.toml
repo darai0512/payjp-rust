@@ -1,0 +1,59 @@
+[package]
+name = "async-payjp-core"
+version.workspace = true
+description.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+path = "src/mod.rs"
+name = "payjp_core"
+
+[dependencies]
+serde.workspace = true
+serde_json = { workspace = true, optional = true }
+smol_str.workspace = true
+miniserde.workspace = true
+async-payjp-types = {path = "../../async-payjp-types"}
+async-payjp-client-core = {path = "../../async-payjp-client-core"}
+
+async-payjp-shared = {path = "../../generated/async-payjp-shared"}
+
+
+[features]
+serialize = ["async-payjp-types/serialize","async-payjp-shared/serialize"]
+deserialize = ["async-payjp-types/deserialize","async-payjp-shared/deserialize", "dep:serde_json"]
+account = []
+balance = []
+charge = []
+customer = []
+event = []
+statement = []
+subscription = []
+tenant = []
+term = []
+three_d_secure_request = []
+token = []
+
+full = ["account",
+"balance",
+"charge",
+"customer",
+"event",
+"statement",
+"subscription",
+"tenant",
+"term",
+"three_d_secure_request",
+"token"]
+
+
+[package.metadata.docs.rs]
+features = ["full"]
+
